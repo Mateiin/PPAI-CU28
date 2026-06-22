@@ -1,15 +1,100 @@
-================================================================================
-COMANDOS PARA LEVANTAR EL PROYECTO
-================================================================================
+# BOLSINES — CU28 Registrar Recepción de Bolsín
 
-1. docker compose up -d                          # Levanta PostgreSQL
-2. cd backend && npm install                     # Instalar dependencias backend
-3. cd backend && npm run start:dev               # Levanta el backend (crea tablas)
-4. cd backend && npx ts-node src/seeds/seed.ts  # Carga datos de prueba
-5. cd frontend && npm install                    # Instalar dependencias frontend
-6. cd frontend && npm start                      # Levanta la pantalla Angular
+Proyecto académico DSI — UTN FRVM, 3º año, Comisión 1, Grupo 10.
 
-Credenciales de prueba:
-  Usuario: ana.gonzalez (id: 1)
-  Bolsín:  BOL-001 — estado inicial: EnBolsinEnviado
-  4 documentaciones listas para recepcionar
+## Requisitos previos
+
+- [Node.js](https://nodejs.org/) v18 o superior
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (para la base de datos)
+- Git
+
+---
+
+## Cómo levantar el proyecto
+
+### 1. Clonar el repositorio
+
+```bash
+git clone <url-del-repo>
+cd PPAI
+```
+
+### 2. Configurar variables de entorno
+
+Copiar el archivo de ejemplo y dejarlo tal cual (los valores por defecto funcionan con Docker):
+
+```bash
+cp .env.example .env
+```
+
+### 3. Levantar la base de datos (PostgreSQL)
+
+Abrir Docker Desktop y esperar a que esté corriendo, luego:
+
+```bash
+docker compose up -d
+```
+
+### 4. Instalar dependencias
+
+```bash
+# Backend
+cd backend
+npm install
+
+# Frontend (abrir otra terminal)
+cd frontend
+npm install
+```
+
+### 5. Cargar datos de prueba (seed)
+
+Desde la carpeta `backend/`:
+
+```bash
+npm run seed
+```
+
+Esto crea el usuario, el empleado, la sesión activa y un bolsín listo para recepcionar.
+
+> Si querés agregar más bolsines para probar, corrés:
+> ```bash
+> npm run seed:extra
+> ```
+> Podés ejecutarlo las veces que quieras, cada vez crea un bolsín nuevo.
+
+### 6. Iniciar el backend
+
+Desde `backend/`:
+
+```bash
+npm run start:dev
+```
+
+El backend queda escuchando en `http://localhost:3000`.
+
+### 7. Iniciar el frontend
+
+Desde `frontend/` (en otra terminal):
+
+```bash
+npm start
+```
+
+El frontend queda disponible en `http://localhost:4200`.
+
+---
+
+## Resumen de URLs
+
+| Servicio   | URL                      |
+|------------|--------------------------|
+| Frontend   | http://localhost:4200    |
+| Backend    | http://localhost:3000    |
+| PostgreSQL | localhost:5432           |
+
+---
+
+## Credenciales de prueba
+
+La sesión ya viene iniciada por el seed. El usuario activo es `ana.gonzalez`.
