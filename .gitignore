@@ -15,5 +15,9 @@ frontend/.angular/
 .claude/
 CLAUDE.md
 
+# Archivos locales
+docs/
+informe.txt
+
 # Logs
 *.log
