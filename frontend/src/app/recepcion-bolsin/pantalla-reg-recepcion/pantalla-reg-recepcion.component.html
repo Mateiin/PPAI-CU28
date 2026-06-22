@@ -1,0 +1,99 @@
+<section class="pantalla">
+  <h1>Registrar Recepción de Bolsín</h1>
+
+  @if (nombreCM) {
+    <p class="cm-usuario">CM destino: <strong>{{ nombreCM }}</strong></p>
+  }
+
+  @if (cargando) {
+    <p>Cargando bolsines...</p>
+  }
+
+  @if (error) {
+    <p class="error">{{ error }}</p>
+  }
+
+  @if (resultado) {
+    <p class="exito">{{ resultado }}</p>
+  }
+
+  @if (!cargando && !bolsinSeleccionado) {
+    @if (bolsines.length === 0) {
+      <p>No hay bolsines pendientes de recepción.</p>
+    } @else {
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th>N° Bolsín</th>
+            <th>Fecha</th>
+            <th>Precinto</th>
+            <th>CM Origen</th>
+            <th>CM Destino</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (b of bolsines; track b.id) {
+            <tr>
+              <td>{{ b.nroBolsin }}</td>
+              <td>{{ b.fecha | date:'dd/MM/yyyy' }}</td>
+              <td>{{ b.nroPrecinto ?? '-' }}</td>
+              <td>{{ b.cmOrigen ?? '-' }}</td>
+              <td>{{ b.cmDestino ?? '-' }}</td>
+              <td>
+                <button (click)="seleccionarBolsin(b)">Seleccionar</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  }
+
+  @if (bolsinSeleccionado) {
+    <h2>Bolsín {{ bolsinSeleccionado.nroBolsin }}</h2>
+    <p>
+      Origen: {{ bolsinSeleccionado.cmOrigen ?? '-' }} |
+      Destino: {{ bolsinSeleccionado.cmDestino ?? '-' }} |
+      Precinto: {{ bolsinSeleccionado.nroPrecinto ?? '-' }}
+    </p>
+
+    <form [formGroup]="form" (ngSubmit)="confirmar()">
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th>N° Doc</th>
+            <th>Tipo</th>
+            <th>Asunto</th>
+            <th>Estado actual</th>
+            <th>Opción de recepción</th>
+          </tr>
+        </thead>
+        <tbody formArrayName="opciones">
+          @for (doc of todasLasDocumentaciones(); track doc.id; let i = $index) {
+            <tr [formGroupName]="i">
+              <td>{{ doc.numero }}</td>
+              <td>{{ doc.tipoDocumento ?? '-' }}</td>
+              <td>{{ doc.asunto ?? '-' }}</td>
+              <td>{{ doc.estadoActual ?? '-' }}</td>
+              <td>
+                <select formControlName="opcion">
+                  @for (op of opcionesRecepcion; track op.valor) {
+                    <option [value]="op.valor">{{ op.etiqueta }}</option>
+                  }
+                </select>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <div class="acciones">
+        <button type="submit" [disabled]="procesando">
+          {{ procesando ? 'Procesando...' : 'Confirmar recepción' }}
+        </button>
+        <button type="button" (click)="cancelar()">Cancelar</button>
+      </div>
+    </form>
+  }
+</section>

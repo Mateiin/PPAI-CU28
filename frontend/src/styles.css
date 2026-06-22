@@ -1,0 +1,15 @@
+body { font-family: Arial, sans-serif; margin: 2rem; color: #222; }
+
+.pantalla { max-width: 900px; }
+h1 { margin-bottom: 1rem; }
+
+.tabla { border-collapse: collapse; width: 100%; margin-bottom: 1rem; }
+.tabla th, .tabla td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; }
+.tabla th { background: #f0f0f0; }
+
+.acciones { display: flex; gap: 1rem; margin-top: 1rem; }
+button { padding: 8px 16px; cursor: pointer; }
+button[disabled] { opacity: 0.5; cursor: not-allowed; }
+
+.error { color: #c00; font-weight: bold; }
+.exito { color: #080; font-weight: bold; }
