@@ -16,6 +16,7 @@ export class GestorRegRecepBolsin {
   private empleadoLogueado: Empleado | null = null;
   private cmDestinoEmpleado: ComisionMedica | null = null;
   private listaBolsinesEnviados: Bolsin[] = [];
+  private datosRemitosYDocumentacion: object[] = [];
   private bolsinSeleccionado: Bolsin | null = null;
   private estadoRecibidoEnCMDestino: Estado | null = null;
   private estadoRecibidoYAceptado: Estado | null = null;
@@ -96,14 +97,15 @@ export class GestorRegRecepBolsin {
 
   obtenerInformacionRemito(): object {
     if (!this.bolsinSeleccionado) throw new NotFoundException('No hay bolsín seleccionado');
-    return this.bolsinSeleccionado.remitos.map((r) => ({
+    this.datosRemitosYDocumentacion = this.bolsinSeleccionado.remitos.map((r) => ({
       numero: r.getNumero(),
       documentaciones: r.tomarDocumentacion().map((dr) => ({
         id: dr.getDocumentacion().id,
         asunto: dr.getDocumentacion().getAsunto(),
-        tipoDocumento: dr.getDocumentacion().tipoDocumento?.nombre,
+        tipoDocumento: dr.getDocumentacion().tipoDocumento?.getNombre(),
       })),
     }));
+    return this.datosRemitosYDocumentacion;
   }
 
   // ── Pasos 39-47: buscar estados necesarios ─────────────────────────────

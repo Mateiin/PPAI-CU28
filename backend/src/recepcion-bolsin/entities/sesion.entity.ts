@@ -7,17 +7,17 @@ export class Sesion {
   id: number;
 
   @Column({ name: 'fecha_inicio', type: 'timestamp' })
-  fechaInicio: Date;
+  fechaHoraInicio: Date;
 
   @Column({ name: 'fecha_fin', type: 'timestamp', nullable: true })
-  fechaFin: Date | null;
+  fechaHoraFin: Date | null;
 
   @ManyToOne(() => Usuario, (u) => u.sesiones, { eager: true })
   @JoinColumn({ name: 'usuario_id' })
   usuario: Usuario;
 
   estaActiva(): boolean {
-    return this.fechaFin === null;
+    return this.fechaHoraFin === null;
   }
 
   static buscarUsuarioLogueado(sesiones: Sesion[]): Usuario | null {

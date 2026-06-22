@@ -64,8 +64,8 @@ async function seed() {
 
   // ── Empleado + Usuario + Sesión activa ──────────────────────────────────
   const empleado = await empleadoRepo.save(empleadoRepo.create({ nombre: 'Ana', apellido: 'González', legajo: 'EMP001', email: 'ana@hospital.com', cmAsignada: cmDestino }));
-  const usuario = await usuarioRepo.save(usuarioRepo.create({ nombreUsuario: 'ana.gonzalez', password: '1234', empleado }));
-  const sesion = await sesionRepo.save(sesionRepo.create({ fechaInicio: new Date(), fechaFin: null, usuario }));
+  const usuario = await usuarioRepo.save(usuarioRepo.create({ nombreUsuario: 'ana.gonzalez', hashPassword: '1234', empleado }));
+  const sesion = await sesionRepo.save(sesionRepo.create({ fechaHoraInicio: new Date(), fechaHoraFin: null, usuario }));
 
   // ── Tipos de documento ──────────────────────────────────────────────────
   const tipoExpediente = await tipoDocRepo.save(tipoDocRepo.create({ nombre: 'Expediente', descripcion: 'Expediente administrativo' }));

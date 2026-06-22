@@ -11,7 +11,7 @@ export class Usuario {
   nombreUsuario: string;
 
   @Column({ name: 'password' })
-  password: string;
+  hashPassword: string;
 
   @ManyToOne(() => Empleado, (e) => e.usuarios, { eager: true })
   @JoinColumn({ name: 'empleado_id' })

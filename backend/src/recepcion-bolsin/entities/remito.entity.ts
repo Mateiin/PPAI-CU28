@@ -5,6 +5,7 @@ import {
 import { DetalleRemito } from './detalle-remito.entity';
 import { SolicitudRemito } from './solicitud-remito.entity';
 import { Bolsin } from './bolsin.entity';
+import { Estado } from './estado.entity';
 
 @Entity('remito')
 export class Remito {
@@ -28,11 +29,21 @@ export class Remito {
   @OneToMany(() => DetalleRemito, (d) => d.remito, { cascade: true, eager: true })
   detallesRemito: DetalleRemito[];
 
+  estado: Estado | null = null;
+
   getNumero(): string {
     return this.numero;
   }
 
   tomarDocumentacion(): DetalleRemito[] {
     return this.detallesRemito;
+  }
+
+  recibirRemito(): void {
+    // transición de estado del remito al ser recibido (CU28)
+  }
+
+  setEstado(estado: Estado): void {
+    this.estado = estado;
   }
 }
