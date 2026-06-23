@@ -1,13 +1,15 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { RecepcionBolsinService } from '../recepcion-bolsin.service';
-import { BolsinDto, DocumentacionDto, OpcionRecepcionRequest } from '../models';
+import { BolsinDto, DocumentacionDto, OpcionRecepcion, OpcionRecepcionRequest } from '../models';
+
+type Fase = 'lista' | 'opcion' | 'marcar';
 
 @Component({
   selector: 'app-pantalla-reg-recepcion',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './pantalla-reg-recepcion.component.html',
 })
 export class PantallaRegRecepcionComponent implements OnInit {
@@ -15,41 +17,52 @@ export class PantallaRegRecepcionComponent implements OnInit {
   nombreCM: string | null = null;
   bolsines: BolsinDto[] = [];
   bolsinSeleccionado: BolsinDto | null = null;
-  form!: FormGroup;
 
+  // Flujo por fases
+  fase: Fase = 'lista';
+  opcionGlobal: number | null = null;
+  docsAfectadas = new Set<number>();
+
+  // Filtros del listado (A1/A2)
+  filtroPrecinto = '';
+  filtroCMOrigen = '';
+
+  // Estado UI
+  ventanaHabilitada = false;
   cargando = false;
   procesando = false;
   error: string | null = null;
   resultado: string | null = null;
 
   readonly opcionesRecepcion = [
-    { valor: 'aceptar',   etiqueta: 'Aceptar' },
-    { valor: 'rechazar',  etiqueta: 'Rechazar' },
-    { valor: 'faltante',  etiqueta: 'Registrar faltante' },
-    { valor: 'redirigir', etiqueta: 'Redirigir' },
+    { valor: 1, etiqueta: 'El contenido del bolsín es igual al registrado' },
+    { valor: 2, etiqueta: 'No se recibe toda la documentación asociada a los remitos' },
+    { valor: 3, etiqueta: 'Existe documentación que no corresponde al destino' },
+    { valor: 4, etiqueta: 'La documentación se debe redirigir a otra área' },
   ];
 
   constructor(
     private readonly service: RecepcionBolsinService,
-    private readonly fb: FormBuilder,
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
-  // ── Paso 2: abrirVentana ───────────────────────────────────────────────
-  ngOnInit(): void {
+  ngOnInit(): void {}
+
+  // ── Paso 1: el EB selecciona la opción ────────────────────────────────
+  habilitarVentana(): void {
+    this.ventanaHabilitada = true;
     this.abrirVentana();
   }
 
+  // ── Paso 2: abrirVentana ───────────────────────────────────────────────
   abrirVentana(): void {
     this.cargando = true;
     this.error = null;
     this.service.getBolsinesARecepcionar().subscribe({
       next: (data) => {
-        this.bolsines = data;
+        this.nombreCM = data.cmUsuario;
+        this.bolsines = data.bolsines;
         this.cargando = false;
-        if (data.length > 0) {
-          this.nombreCM = data[0].cmDestino ?? null;
-        }
         this.cdr.detectChanges();
       },
       error: () => {
@@ -60,55 +73,81 @@ export class PantallaRegRecepcionComponent implements OnInit {
     });
   }
 
-  // ── Paso 22: seleccionarBolsin ─────────────────────────────────────────
-  seleccionarBolsin(bolsin: BolsinDto): void {
-    this.bolsinSeleccionado = bolsin;
-    this.resultado = null;
-    this.error = null;
-
-    const todasLasDoc: DocumentacionDto[] = bolsin.remitos.flatMap((r) => r.documentaciones);
-
-    const opciones = this.fb.array(
-      todasLasDoc.map((doc) =>
-        this.fb.group({
-          documentacionId: [doc.id, Validators.required],
-          opcion: ['aceptar', Validators.required],
-        }),
-      ),
-    );
-
-    this.form = this.fb.group({ opciones });
+  // ── Filtro para A1/A2 ──────────────────────────────────────────────────
+  get bolsinesFiltrados(): BolsinDto[] {
+    return this.bolsines.filter((b) => {
+      const matchPrecinto =
+        !this.filtroPrecinto ||
+        b.nroPrecinto?.toLowerCase().includes(this.filtroPrecinto.toLowerCase());
+      const matchCM =
+        !this.filtroCMOrigen ||
+        b.cmOrigen?.toLowerCase().includes(this.filtroCMOrigen.toLowerCase());
+      return matchPrecinto && matchCM;
+    });
   }
 
-  get opcionesArray(): FormArray {
-    return this.form.get('opciones') as FormArray;
+  // ── Paso 5: seleccionarBolsin ──────────────────────────────────────────
+  seleccionarBolsin(bolsin: BolsinDto): void {
+    this.bolsinSeleccionado = bolsin;
+    this.opcionGlobal = null;
+    this.docsAfectadas = new Set();
+    this.resultado = null;
+    this.error = null;
+    this.fase = 'opcion';
+  }
+
+  // ── Paso 7→8: elegir opción global ────────────────────────────────────
+  elegirOpcion(): void {
+    if (!this.opcionGlobal) return;
+    if (this.opcionGlobal === 1) {
+      // Opción 1: todo aceptado, ir directo a confirmación
+      this.confirmar();
+    } else {
+      // Opciones 2/3/4: marcar cuáles docs están afectadas
+      this.docsAfectadas = new Set();
+      this.fase = 'marcar';
+    }
+  }
+
+  toggleDoc(docId: number): void {
+    if (this.docsAfectadas.has(docId)) {
+      this.docsAfectadas.delete(docId);
+    } else {
+      this.docsAfectadas.add(docId);
+    }
+  }
+
+  estaAfectada(docId: number): boolean {
+    return this.docsAfectadas.has(docId);
   }
 
   todasLasDocumentaciones(): DocumentacionDto[] {
     return this.bolsinSeleccionado?.remitos.flatMap((r) => r.documentaciones) ?? [];
   }
 
-  // ── Paso 36: confirmarSelec ────────────────────────────────────────────
+  // ── Paso 9-10: confirmar ───────────────────────────────────────────────
   confirmar(): void {
-    if (!this.bolsinSeleccionado || this.form.invalid) return;
+    if (!this.bolsinSeleccionado || !this.opcionGlobal) return;
+
+    const confirmado = window.confirm('¿Confirma el registro de la recepción del bolsín?');
+    if (!confirmado) return;
 
     this.procesando = true;
     this.error = null;
-    this.resultado = null;
 
     const payload = {
       usuarioId: 1,
       bolsinId: this.bolsinSeleccionado.id,
-      opciones: this.form.value.opciones as OpcionRecepcionRequest[],
+      opciones: this.buildOpciones(),
     };
 
     this.service.recepcionar(payload).subscribe({
       next: (res) => {
         this.procesando = false;
-        this.resultado =
-          `Bolsín ${res.nroBolsin} recepcionado. Estado: ${res.estadoFinal ?? '-'}. ` +
-          res.documentacionesProcesadas.map((d) => `${d.numero}: ${d.estadoFinal ?? '-'}`).join(' | ');
+        this.resultado = `Bolsín ${res.nroBolsin} recepcionado exitosamente.`;
+        this.fase = 'lista';
         this.bolsinSeleccionado = null;
+        this.opcionGlobal = null;
         this.cdr.detectChanges();
         this.abrirVentana();
       },
@@ -120,10 +159,37 @@ export class PantallaRegRecepcionComponent implements OnInit {
     });
   }
 
-  // ── Paso cancelar ──────────────────────────────────────────────────────
+  // ── Paso cancelar (Obs. 1) ─────────────────────────────────────────────
   cancelar(): void {
     this.bolsinSeleccionado = null;
+    this.opcionGlobal = null;
+    this.docsAfectadas = new Set();
     this.resultado = null;
     this.error = null;
+    this.fase = 'lista';
+  }
+
+  volverAOpciones(): void {
+    this.fase = 'opcion';
+    this.docsAfectadas = new Set();
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────
+
+  private buildOpciones(): OpcionRecepcionRequest[] {
+    return this.todasLasDocumentaciones().map((doc) => ({
+      documentacionId: doc.id,
+      opcion: this.resolverOpcionDoc(doc.id),
+    }));
+  }
+
+  private resolverOpcionDoc(docId: number): OpcionRecepcion {
+    if (!this.docsAfectadas.has(docId)) return 'aceptar';
+    switch (this.opcionGlobal) {
+      case 2: return 'faltante';
+      case 3: return 'rechazar';
+      case 4: return 'redirigir';
+      default: return 'aceptar';
+    }
   }
 }

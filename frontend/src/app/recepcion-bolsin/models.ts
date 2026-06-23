@@ -21,6 +21,11 @@ export interface BolsinDto {
   remitos: RemitoDto[];
 }
 
+export interface BolsinesListaResponse {
+  cmUsuario: string | null;
+  bolsines: BolsinDto[];
+}
+
 export type OpcionRecepcion = 'aceptar' | 'rechazar' | 'faltante' | 'redirigir';
 
 export interface OpcionRecepcionRequest {

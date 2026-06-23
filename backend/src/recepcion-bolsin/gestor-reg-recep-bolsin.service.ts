@@ -1,16 +1,18 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Scope } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Bolsin } from './entities/bolsin.entity';
+import { Remito } from './entities/remito.entity';
+import { Documentacion } from './entities/documentacion.entity';
 import { Sesion } from './entities/sesion.entity';
 import { Estado } from './entities/estado.entity';
 import { Empleado } from './entities/empleado.entity';
 import { ComisionMedica } from './entities/comision-medica.entity';
 import { RecepcionarBolsinDto, OpcionRecepcionDto } from './dto/recepcionar-bolsin.dto';
-import { BolsinResponseDto, ResultadoRecepcionDto } from './dto/bolsin-response.dto';
+import { BolsinResponseDto, BolsinesListaResponseDto, ResultadoRecepcionDto } from './dto/bolsin-response.dto';
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class GestorRegRecepBolsin {
   // Atributos de instancia del diagrama
   private empleadoLogueado: Empleado | null = null;
@@ -28,6 +30,12 @@ export class GestorRegRecepBolsin {
   constructor(
     @InjectRepository(Bolsin)
     private readonly bolsinRepo: Repository<Bolsin>,
+
+    @InjectRepository(Remito)
+    private readonly remitoRepo: Repository<Remito>,
+
+    @InjectRepository(Documentacion)
+    private readonly documentacionRepo: Repository<Documentacion>,
 
     @InjectRepository(Sesion)
     private readonly sesionRepo: Repository<Sesion>,
@@ -56,7 +64,7 @@ export class GestorRegRecepBolsin {
     return this.cmDestinoEmpleado;
   }
 
-  // ── Paso 11: obtener bolsines en estado Enviado ────────────────────────
+  // ── Paso 11: obtener bolsines en estado Enviado para la CM del usuario ──
 
   async obtenerBolsinesEnEstadoEnviado(): Promise<Bolsin[]> {
     const todos = await this.bolsinRepo.find({
@@ -65,6 +73,7 @@ export class GestorRegRecepBolsin {
         cmDestino: true,
         cmOrigen: true,
         remitos: {
+          cEstadosRemito: { estado: true },
           detallesRemito: {
             documentacion: {
               cEstadosDocumento: { estado: true },
@@ -75,7 +84,9 @@ export class GestorRegRecepBolsin {
       },
     });
 
-    this.listaBolsinesEnviados = todos.filter((b) => b.sosEnviado());
+    this.listaBolsinesEnviados = todos.filter(
+      (b) => b.sosEnviado() && b.esTuCMDestino(this.cmDestinoEmpleado!),
+    );
     return this.listaBolsinesEnviados;
   }
 
@@ -137,19 +148,16 @@ export class GestorRegRecepBolsin {
   // ── Paso 49: registrar recepción (orquestador principal) ───────────────
 
   async registrarRecepcionDeBolsin(dto: RecepcionarBolsinDto): Promise<ResultadoRecepcionDto> {
-    // Inicializar empleado y bolsín seleccionado
     await this.buscarEmpleadoLogueado(dto.usuarioId);
     this.buscarCMDestinoDelUsuario();
     await this.obtenerBolsinesEnEstadoEnviado();
     this.tomarBolsinSeleccionado(dto.bolsinId);
 
-    // Buscar todos los estados de una vez
     const todosLosEstados = await this.estadoRepo.find();
     await this.buscarEstadoRecibidoEnCMD(todosLosEstados);
     await this.buscarEstadoRecibidoYAceptado(todosLosEstados);
     await this.buscarEstadoRecibidaYAceptada(todosLosEstados);
 
-    // Resolver estados de documentación según opciones
     this.estadoDocNoRecibida =
       todosLosEstados.find((e) => e.esAmbitoDocumentacion() && e.nombre === 'NoRecibida') ?? null;
     this.estadoDocRecibidaYRechazada =
@@ -160,21 +168,27 @@ export class GestorRegRecepBolsin {
     const bolsin = this.bolsinSeleccionado!;
     const fechaHoraActual = this.obtenerFechaHoraActual();
 
-    // Cambiar estado del bolsín
+    // Paso 11a: actualizar estado del bolsín
     if (!this.estadoRecibidoEnCMDestino) throw new NotFoundException('Estado RecibidoEnCMDestino no encontrado');
     bolsin.crearCEBolsin(fechaHoraActual, this.empleadoLogueado!, this.estadoRecibidoEnCMDestino);
+    await this.bolsinRepo.save(bolsin);
 
-    // Cambiar estado de cada documentación
-    const todosLosDetalles = bolsin.remitos.flatMap((r) => r.detallesRemito);
-    for (const detalle of todosLosDetalles) {
-      const opcion = dto.opciones.find((o) => o.documentacionId === detalle.getDocumentacion().id);
-      const estadoDoc = this.resolverEstadoDoc(opcion);
-      if (estadoDoc) {
-        detalle.actualizarEstadoDoc(estadoDoc);
-      }
+    // Paso 11b: actualizar estado de cada remito
+    if (!this.estadoRecibidoYAceptado) throw new NotFoundException('Estado RecibidoYAceptado no encontrado');
+    for (const remito of bolsin.remitos) {
+      remito.recibirRemito(this.estadoRecibidoYAceptado, fechaHoraActual);
+      await this.remitoRepo.save(remito);
     }
 
-    await this.bolsinRepo.save(bolsin);
+    // Paso 11c: actualizar estado de cada documentación
+    for (const remito of bolsin.remitos) {
+      for (const detalle of remito.detallesRemito) {
+        const doc = detalle.getDocumentacion();
+        const opcion = dto.opciones.find((o) => o.documentacionId === doc.id);
+        this.aplicarTransicionDoc(doc, opcion);
+        await this.documentacionRepo.save(doc);
+      }
+    }
 
     this.llamarCUNotificarRecepcionBolsin();
     return this.finCU(bolsin);
@@ -182,14 +196,13 @@ export class GestorRegRecepBolsin {
 
   // ── Helpers ────────────────────────────────────────────────────────────
 
-  private resolverEstadoDoc(opcion: OpcionRecepcionDto | undefined): Estado | null {
-    if (!opcion) return this.estadoDocRecibidaYAceptada;
-    switch (opcion.opcion) {
-      case 'aceptar':      return this.estadoDocRecibidaYAceptada;
-      case 'rechazar':     return this.estadoDocRecibidaYRechazada;
-      case 'faltante':     return this.estadoDocNoRecibida;
-      case 'redirigir':    return this.estadoDocParaRedirigir;
-      default:             return this.estadoDocRecibidaYAceptada;
+  private aplicarTransicionDoc(doc: Documentacion, opcion: OpcionRecepcionDto | undefined): void {
+    const empleado = this.empleadoLogueado!;
+    switch (opcion?.opcion) {
+      case 'rechazar':  doc.rechazarDoc(this.estadoDocRecibidaYRechazada!, empleado); break;
+      case 'faltante':  doc.registrarFaltante(this.estadoDocNoRecibida!, empleado); break;
+      case 'redirigir': doc.redirigirDocumentacion(this.estadoDocParaRedirigir!, empleado); break;
+      default:          doc.aceptarDoc(this.estadoDocRecibidaYAceptada!, empleado); break;
     }
   }
 
@@ -216,11 +229,14 @@ export class GestorRegRecepBolsin {
   }
 
   // Endpoint de consulta inicial (GET)
-  async getBolsinesARecepcionar(usuarioId: number): Promise<BolsinResponseDto[]> {
+  async getBolsinesARecepcionar(usuarioId: number): Promise<BolsinesListaResponseDto> {
     await this.buscarEmpleadoLogueado(usuarioId);
     this.buscarCMDestinoDelUsuario();
     await this.obtenerBolsinesEnEstadoEnviado();
-    return this.listarBolsines();
+    return {
+      cmUsuario: this.cmDestinoEmpleado?.getNombre() ?? null,
+      bolsines: this.listarBolsines(),
+    };
   }
 
   private mapBolsinToDto(b: Bolsin): BolsinResponseDto {

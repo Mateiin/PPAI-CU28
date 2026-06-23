@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { BolsinDto, RecepcionarBolsinRequest, ResultadoRecepcion } from './models';
+import { BolsinesListaResponse, RecepcionarBolsinRequest, ResultadoRecepcion } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class RecepcionBolsinService {
@@ -12,8 +12,8 @@ export class RecepcionBolsinService {
 
   constructor(private http: HttpClient) {}
 
-  getBolsinesARecepcionar(): Observable<BolsinDto[]> {
-    return this.http.get<BolsinDto[]>(`${this.base}/bolsines`, {
+  getBolsinesARecepcionar(): Observable<BolsinesListaResponse> {
+    return this.http.get<BolsinesListaResponse>(`${this.base}/bolsines`, {
       params: { usuarioId: this.usuarioId },
     });
   }

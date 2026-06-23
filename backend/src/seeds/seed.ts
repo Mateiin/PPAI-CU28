@@ -86,7 +86,7 @@ async function seed() {
   }
 
   // ── Remito + DetalleRemito ──────────────────────────────────────────────
-  const remito = await remitoRepo.save(remitoRepo.create({ numero: 'REM-001', fecha: new Date('2026-06-21'), solicitudRemito: solicitud }));
+  const remito = await remitoRepo.save(remitoRepo.create({ numero: 'REM-001', fecha: new Date('2026-06-21'), solicitudRemito: solicitud, cEstadosRemito: [] }));
   for (const doc of [doc1, doc2, doc3, doc4]) {
     await detalleRemitoRepo.save(detalleRemitoRepo.create({ remito, documentacion: doc }));
   }

@@ -1,99 +1,172 @@
 <section class="pantalla">
   <h1>Registrar Recepción de Bolsín</h1>
 
-  @if (nombreCM) {
-    <p class="cm-usuario">CM destino: <strong>{{ nombreCM }}</strong></p>
+  <!-- ── PASO 1: pantalla inicial con el botón de acceso ── -->
+  @if (!ventanaHabilitada) {
+    <div class="inicio">
+      <p>Seleccione la opción para registrar la recepción de un bolsín.</p>
+      <button class="btn-principal" (click)="habilitarVentana()">
+        Registrar recepción de bolsín
+      </button>
+    </div>
   }
 
-  @if (cargando) {
-    <p>Cargando bolsines...</p>
-  }
+  @if (ventanaHabilitada) {
+    <!-- Paso 2: CM del usuario logueado -->
+    @if (nombreCM) {
+      <p class="cm-usuario">CM destino: <strong>{{ nombreCM }}</strong></p>
+    } @else if (!cargando) {
+      <p class="advertencia">No se encontró una CM asignada al usuario logueado.</p>
+    }
 
-  @if (error) {
-    <p class="error">{{ error }}</p>
-  }
+    @if (error) {
+      <p class="error">{{ error }}</p>
+    }
 
-  @if (resultado) {
-    <p class="exito">{{ resultado }}</p>
-  }
+    @if (resultado) {
+      <p class="exito">{{ resultado }}</p>
+    }
 
-  @if (!cargando && !bolsinSeleccionado) {
-    @if (bolsines.length === 0) {
-      <p>No hay bolsines pendientes de recepción.</p>
+  <!-- ── FASE: LISTA DE BOLSINES ── -->
+  @if (fase === 'lista') {
+    @if (cargando) {
+      <p>Cargando bolsines...</p>
     } @else {
-      <table class="tabla">
-        <thead>
-          <tr>
-            <th>N° Bolsín</th>
-            <th>Fecha</th>
-            <th>Precinto</th>
-            <th>CM Origen</th>
-            <th>CM Destino</th>
-            <th>Acción</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (b of bolsines; track b.id) {
+      <div class="filtros">
+        <input [(ngModel)]="filtroPrecinto" placeholder="Filtrar por N° precinto" />
+        <input [(ngModel)]="filtroCMOrigen" placeholder="Filtrar por CM origen" />
+      </div>
+
+      @if (bolsinesFiltrados.length === 0) {
+        <p>No se encontraron bolsines pendientes de recepción.</p>
+      } @else {
+        <table class="tabla">
+          <thead>
             <tr>
-              <td>{{ b.nroBolsin }}</td>
-              <td>{{ b.fecha | date:'dd/MM/yyyy' }}</td>
-              <td>{{ b.nroPrecinto ?? '-' }}</td>
-              <td>{{ b.cmOrigen ?? '-' }}</td>
-              <td>{{ b.cmDestino ?? '-' }}</td>
-              <td>
-                <button (click)="seleccionarBolsin(b)">Seleccionar</button>
-              </td>
+              <th>N° Bolsín</th>
+              <th>Fecha</th>
+              <th>Precinto</th>
+              <th>CM Origen</th>
+              <th>CM Destino</th>
+              <th>Acción</th>
             </tr>
-          }
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            @for (b of bolsinesFiltrados; track b.id) {
+              <tr>
+                <td>{{ b.nroBolsin }}</td>
+                <td>{{ b.fecha | date:'dd/MM/yyyy' }}</td>
+                <td>{{ b.nroPrecinto ?? '-' }}</td>
+                <td>{{ b.cmOrigen ?? '-' }}</td>
+                <td>{{ b.cmDestino ?? '-' }}</td>
+                <td>
+                  <button (click)="seleccionarBolsin(b)">Seleccionar</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
     }
   }
 
-  @if (bolsinSeleccionado) {
+  <!-- ── FASE: DETALLE DEL BOLSÍN + OPCIONES DE RECEPCIÓN ── -->
+  @if (fase === 'opcion' && bolsinSeleccionado) {
     <h2>Bolsín {{ bolsinSeleccionado.nroBolsin }}</h2>
     <p>
-      Origen: {{ bolsinSeleccionado.cmOrigen ?? '-' }} |
-      Destino: {{ bolsinSeleccionado.cmDestino ?? '-' }} |
-      Precinto: {{ bolsinSeleccionado.nroPrecinto ?? '-' }}
+      Origen: <strong>{{ bolsinSeleccionado.cmOrigen ?? '-' }}</strong> |
+      Precinto: <strong>{{ bolsinSeleccionado.nroPrecinto ?? '-' }}</strong>
     </p>
 
-    <form [formGroup]="form" (ngSubmit)="confirmar()">
-      <table class="tabla">
-        <thead>
-          <tr>
-            <th>N° Doc</th>
-            <th>Tipo</th>
-            <th>Asunto</th>
-            <th>Estado actual</th>
-            <th>Opción de recepción</th>
-          </tr>
-        </thead>
-        <tbody formArrayName="opciones">
-          @for (doc of todasLasDocumentaciones(); track doc.id; let i = $index) {
-            <tr [formGroupName]="i">
-              <td>{{ doc.numero }}</td>
-              <td>{{ doc.tipoDocumento ?? '-' }}</td>
-              <td>{{ doc.asunto ?? '-' }}</td>
-              <td>{{ doc.estadoActual ?? '-' }}</td>
-              <td>
-                <select formControlName="opcion">
-                  @for (op of opcionesRecepcion; track op.valor) {
-                    <option [value]="op.valor">{{ op.etiqueta }}</option>
-                  }
-                </select>
-              </td>
+    @for (remito of bolsinSeleccionado.remitos; track remito.numero) {
+      <div class="remito">
+        <h3>Remito {{ remito.numero }}</h3>
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>N° Doc</th>
+              <th>Tipo</th>
+              <th>Asunto</th>
             </tr>
-          }
-        </tbody>
-      </table>
-
-      <div class="acciones">
-        <button type="submit" [disabled]="procesando">
-          {{ procesando ? 'Procesando...' : 'Confirmar recepción' }}
-        </button>
-        <button type="button" (click)="cancelar()">Cancelar</button>
+          </thead>
+          <tbody>
+            @for (doc of remito.documentaciones; track doc.id) {
+              <tr>
+                <td>{{ doc.numero }}</td>
+                <td>{{ doc.tipoDocumento ?? '-' }}</td>
+                <td>{{ doc.asunto ?? '-' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
       </div>
-    </form>
+    }
+
+    <div class="opciones-recepcion">
+      <h3>Seleccione la opción de recepción</h3>
+      @for (op of opcionesRecepcion; track op.valor) {
+        <label class="opcion-label">
+          <input
+            type="radio"
+            name="opcionGlobal"
+            [value]="op.valor"
+            [(ngModel)]="opcionGlobal"
+          />
+          {{ op.etiqueta }}
+        </label>
+      }
+    </div>
+
+    <div class="acciones">
+      <button (click)="elegirOpcion()" [disabled]="!opcionGlobal || procesando">
+        {{ opcionGlobal === 1 ? 'Confirmar recepción' : 'Continuar' }}
+      </button>
+      <button type="button" (click)="cancelar()">Cancelar</button>
+    </div>
   }
+
+  <!-- ── FASE: MARCAR DOCUMENTACIONES AFECTADAS (opciones 2/3/4) ── -->
+  @if (fase === 'marcar' && bolsinSeleccionado) {
+    <h2>Bolsín {{ bolsinSeleccionado.nroBolsin }}</h2>
+    <p class="instruccion">
+      Marque las documentaciones afectadas:
+    </p>
+
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>Afectada</th>
+          <th>N° Doc</th>
+          <th>Tipo</th>
+          <th>Asunto</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (doc of todasLasDocumentaciones(); track doc.id) {
+          <tr>
+            <td>
+              <input
+                type="checkbox"
+                [checked]="estaAfectada(doc.id)"
+                (change)="toggleDoc(doc.id)"
+              />
+            </td>
+            <td>{{ doc.numero }}</td>
+            <td>{{ doc.tipoDocumento ?? '-' }}</td>
+            <td>{{ doc.asunto ?? '-' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <div class="acciones">
+      <button (click)="confirmar()" [disabled]="procesando">
+        {{ procesando ? 'Procesando...' : 'Confirmar recepción' }}
+      </button>
+      <button type="button" (click)="volverAOpciones()">Volver</button>
+      <button type="button" (click)="cancelar()">Cancelar</button>
+    </div>
+  }
+
+  } <!-- fin ventanaHabilitada -->
 </section>

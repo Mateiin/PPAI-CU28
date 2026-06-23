@@ -21,6 +21,11 @@ export interface BolsinResponseDto {
   remitos: RemitoResponseDto[];
 }
 
+export interface BolsinesListaResponseDto {
+  cmUsuario: string | null;
+  bolsines: BolsinResponseDto[];
+}
+
 export interface ResultadoRecepcionDto {
   bolsinId: number;
   nroBolsin: string;

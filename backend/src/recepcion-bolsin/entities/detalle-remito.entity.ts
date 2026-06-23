@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Remito } from './remito.entity';
 import { Documentacion } from './documentacion.entity';
 import { Estado } from './estado.entity';
+import { Empleado } from './empleado.entity';
 
 @Entity('detalle_remito')
 export class DetalleRemito {
@@ -20,7 +21,7 @@ export class DetalleRemito {
     return this.documentacion;
   }
 
-  actualizarEstadoDoc(estado: Estado): void {
-    this.documentacion.actualizarEstadoDoc(estado);
+  actualizarEstadoDoc(estado: Estado, empleado: Empleado): void {
+    this.documentacion.actualizarEstadoDoc(estado, empleado);
   }
 }

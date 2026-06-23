@@ -6,6 +6,7 @@ import { DetalleRemito } from './detalle-remito.entity';
 import { SolicitudRemito } from './solicitud-remito.entity';
 import { Bolsin } from './bolsin.entity';
 import { Estado } from './estado.entity';
+import { CambioEstadoRemito } from './control-estado-remito.entity';
 
 @Entity('remito')
 export class Remito {
@@ -29,7 +30,8 @@ export class Remito {
   @OneToMany(() => DetalleRemito, (d) => d.remito, { cascade: true, eager: true })
   detallesRemito: DetalleRemito[];
 
-  estado: Estado | null = null;
+  @OneToMany(() => CambioEstadoRemito, (c) => c.remito, { cascade: true, eager: true })
+  cEstadosRemito: CambioEstadoRemito[];
 
   getNumero(): string {
     return this.numero;
@@ -39,11 +41,23 @@ export class Remito {
     return this.detallesRemito;
   }
 
-  recibirRemito(): void {
-    // transición de estado del remito al ser recibido (CU28)
+  getCambioEstadoActual(): CambioEstadoRemito | null {
+    if (!this.cEstadosRemito?.length) return null;
+    return this.cEstadosRemito.reduce((prev, curr) =>
+      curr.fechaHoraInicio > prev.fechaHoraInicio ? curr : prev,
+    );
   }
 
-  setEstado(estado: Estado): void {
-    this.estado = estado;
+  recibirRemito(estado: Estado, fecha: Date): void {
+    const actual = this.getCambioEstadoActual();
+    if (actual && actual.sosUltimo()) {
+      actual.setFechaHoraFin(fecha);
+    }
+    const nuevo = new CambioEstadoRemito();
+    nuevo.fechaHoraInicio = fecha;
+    nuevo.fechaHoraFin = null;
+    nuevo.estado = estado;
+    nuevo.remito = this;
+    this.cEstadosRemito.push(nuevo);
   }
 }

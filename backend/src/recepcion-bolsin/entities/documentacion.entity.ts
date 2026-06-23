@@ -6,6 +6,7 @@ import { TipoDocumento } from './tipo-documento.entity';
 import { CambioEstadoDocumentacion } from './control-estado-documentacion.entity';
 import { Estado } from './estado.entity';
 import { DetalleRemito } from './detalle-remito.entity';
+import { Empleado } from './empleado.entity';
 
 @Entity('documentacion')
 export class Documentacion {
@@ -50,38 +51,40 @@ export class Documentacion {
     );
   }
 
-  crearCEDoc(estado: Estado, fechaHoraInicio: Date): CambioEstadoDocumentacion {
+  crearCEDoc(estado: Estado, fechaHoraInicio: Date, empleado: Empleado): CambioEstadoDocumentacion {
     const nuevo = new CambioEstadoDocumentacion();
     nuevo.fechaHoraInicio = fechaHoraInicio;
     nuevo.fechaHoraFin = null;
     nuevo.estado = estado;
+    nuevo.logEmpleado = empleado.getNombreCompleto();
+    nuevo.responsableCE = empleado;
     nuevo.documentacion = this;
     this.cEstadosDocumento.push(nuevo);
     return nuevo;
   }
 
-  actualizarEstadoDoc(estado: Estado): void {
+  actualizarEstadoDoc(estado: Estado, empleado: Empleado): void {
     const ahora = new Date();
     const actual = this.getCambioEstadoActual();
     if (actual && actual.sosUltimo()) {
       actual.setFechaHoraFin(ahora);
     }
-    this.crearCEDoc(estado, ahora);
+    this.crearCEDoc(estado, ahora, empleado);
   }
 
-  aceptarDoc(estado: Estado): void {
-    this.actualizarEstadoDoc(estado);
+  aceptarDoc(estado: Estado, empleado: Empleado): void {
+    this.actualizarEstadoDoc(estado, empleado);
   }
 
-  rechazarDoc(estado: Estado): void {
-    this.actualizarEstadoDoc(estado);
+  rechazarDoc(estado: Estado, empleado: Empleado): void {
+    this.actualizarEstadoDoc(estado, empleado);
   }
 
-  registrarFaltante(estado: Estado): void {
-    this.actualizarEstadoDoc(estado);
+  registrarFaltante(estado: Estado, empleado: Empleado): void {
+    this.actualizarEstadoDoc(estado, empleado);
   }
 
-  redirigirDocumentacion(estado: Estado): void {
-    this.actualizarEstadoDoc(estado);
+  redirigirDocumentacion(estado: Estado, empleado: Empleado): void {
+    this.actualizarEstadoDoc(estado, empleado);
   }
 }

@@ -60,7 +60,7 @@ async function seedExtra() {
     }));
   }
 
-  const remito = await remitoRepo.save(remitoRepo.create({ numero: `REM-${suffix}`, fecha: new Date(), solicitudRemito: solicitud }));
+  const remito = await remitoRepo.save(remitoRepo.create({ numero: `REM-${suffix}`, fecha: new Date(), solicitudRemito: solicitud, cEstadosRemito: [] }));
   for (const doc of [doc1, doc2, doc3, doc4]) {
     await detalleRemitoRepo.save(detalleRemitoRepo.create({ remito, documentacion: doc }));
   }
