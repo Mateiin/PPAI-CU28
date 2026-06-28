@@ -20,8 +20,8 @@ export class Sesion {
     return this.fechaHoraFin === null;
   }
 
-  static buscarUsuarioLogueado(sesiones: Sesion[]): Usuario | null {
-    const activa = sesiones.find((s) => s.estaActiva());
-    return activa ? activa.usuario : null;
+  buscarUsuarioLogueado(): Usuario | null {
+    if (!this.estaActiva()) return null;
+    return this.usuario ?? null;
   }
 }

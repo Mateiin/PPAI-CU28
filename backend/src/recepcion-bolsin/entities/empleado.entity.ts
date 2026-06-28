@@ -13,9 +13,6 @@ export class Empleado {
   @Column({ name: 'apellido' })
   apellido: string;
 
-  @Column({ name: 'legajo', unique: true })
-  legajo: string;
-
   @Column({ name: 'email', type: 'varchar', nullable: true })
   email: string | null;
 

@@ -37,89 +37,124 @@ async function seed() {
   // ── Estados ─────────────────────────────────────────────────────────────
   const estados = await estadoRepo.save([
     // Bolsín
-    estadoRepo.create({ nombre: 'Preparado',          ambito: AmbitoEstado.BOLSIN,        descripcion: 'Bolsín preparado para envío' }),
-    estadoRepo.create({ nombre: 'EnBolsinSaliente',   ambito: AmbitoEstado.BOLSIN,        descripcion: 'Bolsín saliente' }),
-    estadoRepo.create({ nombre: 'EnBolsinEnviado',    ambito: AmbitoEstado.BOLSIN,        descripcion: 'Bolsín enviado en tránsito' }),
-    estadoRepo.create({ nombre: 'RecibidoEnCMDestino',ambito: AmbitoEstado.BOLSIN,        descripcion: 'Bolsín recibido en CM destino' }),
+    estadoRepo.create({ nombre: 'Preparado',           ambito: AmbitoEstado.BOLSIN,        descripcion: 'Bolsín preparado para envío' }),
+    estadoRepo.create({ nombre: 'EnBolsinSaliente',    ambito: AmbitoEstado.BOLSIN,        descripcion: 'Bolsín saliente' }),
+    estadoRepo.create({ nombre: 'EnBolsinEnviado',     ambito: AmbitoEstado.BOLSIN,        descripcion: 'Bolsín enviado en tránsito' }),
+    estadoRepo.create({ nombre: 'RecibidoEnCMDestino', ambito: AmbitoEstado.BOLSIN,        descripcion: 'Bolsín recibido en CM destino' }),
     // Remito
-    estadoRepo.create({ nombre: 'RecibidoYAceptado',  ambito: AmbitoEstado.REMITO,        descripcion: 'Remito recibido y aceptado' }),
+    estadoRepo.create({ nombre: 'RecibidoYAceptado',   ambito: AmbitoEstado.REMITO,        descripcion: 'Remito recibido y aceptado' }),
     // Documentación
-    estadoRepo.create({ nombre: 'Registrada',         ambito: AmbitoEstado.DOCUMENTACION, descripcion: 'Documentación registrada' }),
-    estadoRepo.create({ nombre: 'EnRemito',           ambito: AmbitoEstado.DOCUMENTACION, descripcion: 'Documentación en remito' }),
-    estadoRepo.create({ nombre: 'EnBolsinSaliente',   ambito: AmbitoEstado.DOCUMENTACION, descripcion: 'Documentación en bolsín saliente' }),
-    estadoRepo.create({ nombre: 'EnBolsinEnviado',    ambito: AmbitoEstado.DOCUMENTACION, descripcion: 'Documentación en bolsín enviado' }),
-    estadoRepo.create({ nombre: 'NoRecibida',         ambito: AmbitoEstado.DOCUMENTACION, descripcion: 'Documentación no recibida (faltante)' }),
-    estadoRepo.create({ nombre: 'RecibidaYRechazada', ambito: AmbitoEstado.DOCUMENTACION, descripcion: 'Documentación recibida y rechazada' }),
-    estadoRepo.create({ nombre: 'RecibidaYAceptada',  ambito: AmbitoEstado.DOCUMENTACION, descripcion: 'Documentación recibida y aceptada' }),
-    estadoRepo.create({ nombre: 'ParaRedirigir',      ambito: AmbitoEstado.DOCUMENTACION, descripcion: 'Documentación para redirigir' }),
-    estadoRepo.create({ nombre: 'DeBaja',             ambito: AmbitoEstado.DOCUMENTACION, descripcion: 'Documentación dada de baja' }),
+    estadoRepo.create({ nombre: 'Registrada',          ambito: AmbitoEstado.DOCUMENTACION, descripcion: 'Documentación registrada' }),
+    estadoRepo.create({ nombre: 'EnRemito',            ambito: AmbitoEstado.DOCUMENTACION, descripcion: 'Documentación en remito' }),
+    estadoRepo.create({ nombre: 'EnBolsinSaliente',    ambito: AmbitoEstado.DOCUMENTACION, descripcion: 'Documentación en bolsín saliente' }),
+    estadoRepo.create({ nombre: 'EnBolsinEnviado',     ambito: AmbitoEstado.DOCUMENTACION, descripcion: 'Documentación en bolsín enviado' }),
+    estadoRepo.create({ nombre: 'NoRecibida',          ambito: AmbitoEstado.DOCUMENTACION, descripcion: 'Documentación no recibida (faltante)' }),
+    estadoRepo.create({ nombre: 'RecibidaYRechazada',  ambito: AmbitoEstado.DOCUMENTACION, descripcion: 'Documentación recibida y rechazada' }),
+    estadoRepo.create({ nombre: 'RecibidaYAceptada',   ambito: AmbitoEstado.DOCUMENTACION, descripcion: 'Documentación recibida y aceptada' }),
+    estadoRepo.create({ nombre: 'ParaRedirigir',       ambito: AmbitoEstado.DOCUMENTACION, descripcion: 'Documentación para redirigir' }),
+    estadoRepo.create({ nombre: 'DeBaja',              ambito: AmbitoEstado.DOCUMENTACION, descripcion: 'Documentación dada de baja' }),
   ]);
 
-  const estadoEnBolsinEnviado = estados.find((e) => e.nombre === 'EnBolsinEnviado' && e.esAmbitoBolsin())!;
-  const estadoDocEnBolsinEnviado = estados.find((e) => e.nombre === 'EnBolsinEnviado' && e.esAmbitoDocumentacion())!;
+  const estBolsinEnviado    = estados.find((e) => e.nombre === 'EnBolsinEnviado' && e.esAmbitoBolsin())!;
+  const estDocEnBolsinEnv   = estados.find((e) => e.nombre === 'EnBolsinEnviado' && e.esAmbitoDocumentacion())!;
 
   // ── Comisiones Médicas ───────────────────────────────────────────────────
-  const cmOrigen = await cmRepo.save(cmRepo.create({ nombre: 'CM Central', codigo: 'CMC-001', email: 'central@hospital.com', telefono: '0351-111111' }));
-  const cmDestino = await cmRepo.save(cmRepo.create({ nombre: 'CM Norte', codigo: 'CMN-002', email: 'norte@hospital.com', telefono: '0351-222222' }));
+  const cmCentral  = await cmRepo.save(cmRepo.create({ nombre: 'CM Central', codigo: 'CMC-001', direccion: 'Av. Colón 1234', email: 'central@hospital.com', telefono: '0351-111111' }));
+  const cmNorte    = await cmRepo.save(cmRepo.create({ nombre: 'CM Norte',   codigo: 'CMN-002', direccion: 'Bv. Illia 567',  email: 'norte@hospital.com',   telefono: '0351-222222' }));
+  const cmSur      = await cmRepo.save(cmRepo.create({ nombre: 'CM Sur',     codigo: 'CMS-003', direccion: 'Ruta 9 km 10',   email: 'sur@hospital.com',     telefono: '0351-333333' }));
 
   // ── Empleado + Usuario + Sesión activa ──────────────────────────────────
-  const empleado = await empleadoRepo.save(empleadoRepo.create({ nombre: 'Ana', apellido: 'González', legajo: 'EMP001', email: 'ana@hospital.com', cmAsignada: cmDestino }));
-  const usuario = await usuarioRepo.save(usuarioRepo.create({ nombreUsuario: 'ana.gonzalez', hashPassword: '1234', empleado }));
-  const sesion = await sesionRepo.save(sesionRepo.create({ fechaHoraInicio: new Date(), fechaHoraFin: null, usuario }));
+  const empleado = await empleadoRepo.save(empleadoRepo.create({ nombre: 'Ana', apellido: 'González', email: 'ana@hospital.com', cmAsignada: cmNorte }));
+  const usuario  = await usuarioRepo.save(usuarioRepo.create({ nombre: 'ana.gonzalez', hashPassword: '1234', empleado }));
+  await sesionRepo.save(sesionRepo.create({ fechaHoraInicio: new Date(), fechaHoraFin: null, usuario }));
 
   // ── Tipos de documento ──────────────────────────────────────────────────
   const tipoExpediente = await tipoDocRepo.save(tipoDocRepo.create({ nombre: 'Expediente', descripcion: 'Expediente administrativo' }));
-  const tipoNota = await tipoDocRepo.save(tipoDocRepo.create({ nombre: 'Nota', descripcion: 'Nota interna' }));
+  const tipoNota       = await tipoDocRepo.save(tipoDocRepo.create({ nombre: 'Nota',       descripcion: 'Nota interna' }));
+  const tipoInforme    = await tipoDocRepo.save(tipoDocRepo.create({ nombre: 'Informe',    descripcion: 'Informe médico' }));
 
-  // ── Solicitud de remito ─────────────────────────────────────────────────
-  const solicitud = await solicitudRemitoRepo.save(solicitudRemitoRepo.create({ numero: 'SR-001', fecha: new Date('2026-06-20') }));
+  // ── Helper para crear un bolsín completo ────────────────────────────────
+  async function crearBolsin(
+    nro: string,
+    nroPrecinto: string,
+    peso: number,
+    fecha: Date,
+    cmOrigen: ComisionMedica,
+    cmDestino: ComisionMedica,
+    solicitudNro: string,
+    remitoNro: string,
+    docs: { numero: string; asunto: string; tipo: TipoDocumento }[],
+  ) {
+    const solicitud = await solicitudRemitoRepo.save(
+      solicitudRemitoRepo.create({ numero: solicitudNro, fecha }),
+    );
 
-  // ── Documentaciones ─────────────────────────────────────────────────────
-  const doc1 = await docRepo.save(docRepo.create({ numero: 'DOC-001', asunto: 'Expediente 123 - correcta', tipoDocumento: tipoExpediente, cEstadosDocumento: [] }));
-  const doc2 = await docRepo.save(docRepo.create({ numero: 'DOC-002', asunto: 'Nota sin firma', tipoDocumento: tipoNota, cEstadosDocumento: [] }));
-  const doc3 = await docRepo.save(docRepo.create({ numero: 'DOC-003', asunto: 'Expediente con hojas faltantes', tipoDocumento: tipoExpediente, cEstadosDocumento: [] }));
-  const doc4 = await docRepo.save(docRepo.create({ numero: 'DOC-004', asunto: 'Expediente destino incorrecto', tipoDocumento: tipoExpediente, cEstadosDocumento: [] }));
+    const documentaciones: Documentacion[] = [];
+    for (const d of docs) {
+      const doc = await docRepo.save(docRepo.create({ numero: d.numero, asunto: d.asunto, tipoDocumento: d.tipo, cEstadosDocumento: [] }));
+      await ctrlDocRepo.save(ctrlDocRepo.create({ estado: estDocEnBolsinEnv, fechaHoraInicio: fecha, fechaHoraFin: null, documentacion: doc }));
+      documentaciones.push(doc);
+    }
 
-  // Estado inicial de cada documentación: EnBolsinEnviado
-  for (const doc of [doc1, doc2, doc3, doc4]) {
-    await ctrlDocRepo.save(ctrlDocRepo.create({ estado: estadoDocEnBolsinEnviado, fechaHoraInicio: new Date('2026-06-21T10:00:00'), fechaHoraFin: null, documentacion: doc }));
+    const remito = await remitoRepo.save(
+      remitoRepo.create({ numero: remitoNro, fecha, solicitudRemito: solicitud, cEstadosRemito: [] }),
+    );
+    for (const doc of documentaciones) {
+      await detalleRemitoRepo.save(detalleRemitoRepo.create({ remito, documentacion: doc }));
+    }
+
+    const bolsin = await bolsinRepo.save(bolsinRepo.create({
+      nroBolsin: nro, fecha, peso, nroPrecinto, cmOrigen, cmDestino,
+      empleadoResponsable: empleado, cEstadosBolsin: [],
+    }));
+
+    remito.bolsin = bolsin;
+    await remitoRepo.save(remito);
+
+    await ctrlBolsinRepo.save(ctrlBolsinRepo.create({
+      estado: estBolsinEnviado,
+      fechaHoraInicio: fecha,
+      fechaHoraFin: null,
+      bolsin,
+    }));
+
+    return bolsin;
   }
 
-  // ── Remito + DetalleRemito ──────────────────────────────────────────────
-  const remito = await remitoRepo.save(remitoRepo.create({ numero: 'REM-001', fecha: new Date('2026-06-21'), solicitudRemito: solicitud, cEstadosRemito: [] }));
-  for (const doc of [doc1, doc2, doc3, doc4]) {
-    await detalleRemitoRepo.save(detalleRemitoRepo.create({ remito, documentacion: doc }));
-  }
+  // ── 5 Bolsines en estado EnBolsinEnviado ────────────────────────────────
+  await crearBolsin('BOL-001', 'PREC-001', 2.5, new Date('2026-06-20'), cmCentral, cmNorte, 'SR-001', 'REM-001', [
+    { numero: 'DOC-001', asunto: 'Expediente 4521 - Licencia médica',     tipo: tipoExpediente },
+    { numero: 'DOC-002', asunto: 'Nota de solicitud de insumos',          tipo: tipoNota       },
+    { numero: 'DOC-003', asunto: 'Informe de auditoría enero',            tipo: tipoInforme    },
+  ]);
 
-  // ── Bolsín en estado EnBolsinEnviado ────────────────────────────────────
-  const bolsin = await bolsinRepo.save(bolsinRepo.create({
-    nroBolsin: 'BOL-001',
-    fecha: new Date('2026-06-21'),
-    peso: 2.5,
-    nroPrecinto: 'PREC-001',
-    cmOrigen,
-    cmDestino,
-    empleadoResponsable: empleado,
-    cEstadosBolsin: [],
-  }));
+  await crearBolsin('BOL-002', 'PREC-002', 1.8, new Date('2026-06-21'), cmCentral, cmNorte, 'SR-002', 'REM-002', [
+    { numero: 'DOC-004', asunto: 'Expediente 4522 - Baja por enfermedad', tipo: tipoExpediente },
+    { numero: 'DOC-005', asunto: 'Nota interna - cambio de guardia',      tipo: tipoNota       },
+  ]);
 
-  // Asociar remito al bolsín
-  remito.bolsin = bolsin;
-  await remitoRepo.save(remito);
+  await crearBolsin('BOL-003', 'PREC-003', 3.2, new Date('2026-06-22'), cmSur, cmNorte, 'SR-003', 'REM-003', [
+    { numero: 'DOC-006', asunto: 'Expediente 4523 - Alta médica',         tipo: tipoExpediente },
+    { numero: 'DOC-007', asunto: 'Informe de guardia nocturna',           tipo: tipoInforme    },
+    { numero: 'DOC-008', asunto: 'Nota de derivación',                    tipo: tipoNota       },
+    { numero: 'DOC-009', asunto: 'Expediente 4524 - Control periódico',   tipo: tipoExpediente },
+  ]);
 
-  await ctrlBolsinRepo.save(ctrlBolsinRepo.create({
-    estado: estadoEnBolsinEnviado,
-    fechaHoraInicio: new Date('2026-06-21T08:00:00'),
-    fechaHoraFin: null,
-    logEmpleado: empleado.getNombreCompleto(),
-    responsableCE: empleado,
-    bolsin,
-  }));
+  await crearBolsin('BOL-004', 'PREC-004', 0.9, new Date('2026-06-23'), cmCentral, cmNorte, 'SR-004', 'REM-004', [
+    { numero: 'DOC-010', asunto: 'Nota de requerimiento urgente',         tipo: tipoNota       },
+    { numero: 'DOC-011', asunto: 'Informe de resultados de laboratorio',  tipo: tipoInforme    },
+  ]);
+
+  await crearBolsin('BOL-005', 'PREC-005', 4.1, new Date('2026-06-24'), cmSur, cmNorte, 'SR-005', 'REM-005', [
+    { numero: 'DOC-012', asunto: 'Expediente 4525 - Jubilación',          tipo: tipoExpediente },
+    { numero: 'DOC-013', asunto: 'Expediente 4526 - Licencia sin sueldo', tipo: tipoExpediente },
+    { numero: 'DOC-014', asunto: 'Nota de traslado de personal',          tipo: tipoNota       },
+  ]);
 
   console.log(`Seed completado.
-  - Usuario: ana.gonzalez (id: ${usuario.id})
-  - Bolsín: BOL-001 (id: ${bolsin.id}) — estado: EnBolsinEnviado
-  - 4 documentaciones en estado EnBolsinEnviado`);
+  - Usuario: ana.gonzalez / 1234
+  - 5 bolsines en estado EnBolsinEnviado (BOL-001 al BOL-005)
+  - 14 documentaciones listas para recepcionar`);
 
   await app.close();
 }

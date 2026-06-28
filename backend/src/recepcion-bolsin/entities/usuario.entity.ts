@@ -7,8 +7,8 @@ export class Usuario {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'nombre_usuario', unique: true })
-  nombreUsuario: string;
+  @Column({ name: 'nombre', unique: true })
+  nombre: string;
 
   @Column({ name: 'password' })
   hashPassword: string;

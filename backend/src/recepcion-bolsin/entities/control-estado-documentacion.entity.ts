@@ -1,7 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Documentacion } from './documentacion.entity';
 import { Estado } from './estado.entity';
-import { Empleado } from './empleado.entity';
 
 @Entity('cambio_estado_documentacion')
 export class CambioEstadoDocumentacion {
@@ -14,16 +13,9 @@ export class CambioEstadoDocumentacion {
   @Column({ name: 'fecha_hora_fin', type: 'timestamp', nullable: true })
   fechaHoraFin: Date | null;
 
-  @Column({ name: 'log_empleado', type: 'varchar', nullable: true })
-  logEmpleado: string | null;
-
   @ManyToOne(() => Estado, { eager: true })
   @JoinColumn({ name: 'estado_id' })
   estado: Estado;
-
-  @ManyToOne(() => Empleado, { nullable: true, eager: true })
-  @JoinColumn({ name: 'responsable_ce_id' })
-  responsableCE: Empleado | null;
 
   @ManyToOne(() => Documentacion, (d) => d.cEstadosDocumento)
   @JoinColumn({ name: 'documentacion_id' })
@@ -37,6 +29,3 @@ export class CambioEstadoDocumentacion {
     this.fechaHoraFin = fecha;
   }
 }
-
-// Alias para compatibilidad con imports existentes
-export { CambioEstadoDocumentacion as ControlEstadoDocumentacion };

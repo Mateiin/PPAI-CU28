@@ -1,13 +1,15 @@
-import { Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Remito } from './remito.entity';
 import { Documentacion } from './documentacion.entity';
 import { Estado } from './estado.entity';
-import { Empleado } from './empleado.entity';
 
 @Entity('detalle_remito')
 export class DetalleRemito {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @Column({ name: 'nombre', type: 'varchar', nullable: true })
+  nombre: string | null;
 
   @ManyToOne(() => Remito, (r) => r.detallesRemito)
   @JoinColumn({ name: 'remito_id' })
@@ -21,7 +23,7 @@ export class DetalleRemito {
     return this.documentacion;
   }
 
-  actualizarEstadoDoc(estado: Estado, empleado: Empleado): void {
-    this.documentacion.actualizarEstadoDoc(estado, empleado);
+  actualizarEstadoDoc(estado: Estado): void {
+    this.documentacion.actualizarEstadoDoc(estado);
   }
 }

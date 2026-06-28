@@ -72,17 +72,22 @@ export class Bolsin {
     return this.remitos;
   }
 
-  crearCEBolsin(fechaHoraInicio: Date, empleado: Empleado, estado: Estado): CambioEstadoBolsin {
+  actualizarCEBolsin(estado: Estado, fecha: Date): void {
     const actual = this.getCambioEstadoActual();
     if (actual && actual.sosUltimo()) {
-      actual.setFechaHoraFin(fechaHoraInicio);
+      actual.setFechaHoraFin(fecha);
     }
+    this.crearCEBolsin(fecha, estado);
+  }
 
+  registrarRecepcion(estado: Estado, fecha: Date): void {
+    this.actualizarCEBolsin(estado, fecha);
+  }
+
+  crearCEBolsin(fechaHoraInicio: Date, estado: Estado): CambioEstadoBolsin {
     const nuevo = new CambioEstadoBolsin();
     nuevo.fechaHoraInicio = fechaHoraInicio;
     nuevo.fechaHoraFin = null;
-    nuevo.logEmpleado = empleado.getNombreCompleto();
-    nuevo.responsableCE = empleado;
     nuevo.estado = estado;
     nuevo.bolsin = this;
     this.cEstadosBolsin.push(nuevo);

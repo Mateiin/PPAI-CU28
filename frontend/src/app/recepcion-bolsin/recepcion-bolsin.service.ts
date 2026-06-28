@@ -8,7 +8,7 @@ export class RecepcionBolsinService {
   private readonly base = 'http://localhost:3000/recepcion-bolsin';
 
   // ID del usuario logueado — en una app real vendría del servicio de auth
-  private readonly usuarioId = 1;
+  readonly usuarioId = 1;
 
   constructor(private http: HttpClient) {}
 

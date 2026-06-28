@@ -12,6 +12,9 @@ export class ComisionMedica {
   @Column({ name: 'codigo', unique: true })
   codigo: string;
 
+  @Column({ name: 'direccion', type: 'varchar', nullable: true })
+  direccion: string | null;
+
   @Column({ name: 'email', type: 'varchar', nullable: true })
   email: string;
 

@@ -48,16 +48,20 @@ export class Remito {
     );
   }
 
-  recibirRemito(estado: Estado, fecha: Date): void {
-    const actual = this.getCambioEstadoActual();
-    if (actual && actual.sosUltimo()) {
-      actual.setFechaHoraFin(fecha);
-    }
+  setEstado(estado: Estado, fecha: Date): void {
     const nuevo = new CambioEstadoRemito();
     nuevo.fechaHoraInicio = fecha;
     nuevo.fechaHoraFin = null;
     nuevo.estado = estado;
     nuevo.remito = this;
     this.cEstadosRemito.push(nuevo);
+  }
+
+  recibirRemito(estado: Estado, fecha: Date): void {
+    const actual = this.getCambioEstadoActual();
+    if (actual && actual.sosUltimo()) {
+      actual.setFechaHoraFin(fecha);
+    }
+    this.setEstado(estado, fecha);
   }
 }

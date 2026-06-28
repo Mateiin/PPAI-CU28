@@ -17,6 +17,7 @@ export class PantallaRegRecepcionComponent implements OnInit {
   nombreCM: string | null = null;
   bolsines: BolsinDto[] = [];
   bolsinSeleccionado: BolsinDto | null = null;
+  notificacion: string | null = null;
 
   // Flujo por fases
   fase: Fase = 'lista';
@@ -48,13 +49,12 @@ export class PantallaRegRecepcionComponent implements OnInit {
 
   ngOnInit(): void {}
 
-  // ── Paso 1: el EB selecciona la opción ────────────────────────────────
-  habilitarVentana(): void {
-    this.ventanaHabilitada = true;
-    this.abrirVentana();
+  // ── Métodos del diagrama PantallaRegRecepBolsin ───────────────────────
+
+  opcRegistrarRecepcionDeBolsin(): void {
+    this.habilitarVentana();
   }
 
-  // ── Paso 2: abrirVentana ───────────────────────────────────────────────
   abrirVentana(): void {
     this.cargando = true;
     this.error = null;
@@ -63,6 +63,8 @@ export class PantallaRegRecepcionComponent implements OnInit {
         this.nombreCM = data.cmUsuario;
         this.bolsines = data.bolsines;
         this.cargando = false;
+        this.mostrarCMDelUsuario();
+        this.mostrarListadoBolsines();
         this.cdr.detectChanges();
       },
       error: () => {
@@ -73,7 +75,65 @@ export class PantallaRegRecepcionComponent implements OnInit {
     });
   }
 
-  // ── Filtro para A1/A2 ──────────────────────────────────────────────────
+  mostrarCMDelUsuario(): void {
+    // Muestra el nombre de la CM del usuario — binding via nombreCM en el template
+  }
+
+  mostrarListadoBolsines(): void {
+    this.fase = 'lista';
+  }
+
+  seleccionarBolsin(bolsin: BolsinDto): void {
+    this.bolsinSeleccionado = bolsin;
+    this.opcionGlobal = null;
+    this.docsAfectadas = new Set();
+    this.resultado = null;
+    this.error = null;
+    this.mostrarRemitosYDocumentacion();
+    this.mostrarOpcionesDeRecepcion();
+  }
+
+  mostrarRemitosYDocumentacion(): void {
+    this.fase = 'opcion';
+  }
+
+  mostrarOpcionesDeRecepcion(): void {
+    // Habilita los radio buttons de opción en la fase 'opcion'
+  }
+
+  seleccionarOpcionDeRecepcion(): void {
+    this.elegirOpcion();
+  }
+
+  solicitarConfirmacion(): void {
+    this.confirmar();
+  }
+
+  confirmarSelec(): void {
+    this.confirmar();
+  }
+
+  notificarOperacionExitosa(): void {
+    this.resultado = `Bolsín ${this.bolsinSeleccionado?.nroBolsin ?? ''} recepcionado exitosamente.`;
+    this.notificacion = this.resultado;
+  }
+
+  cancelar(): void {
+    this.bolsinSeleccionado = null;
+    this.opcionGlobal = null;
+    this.docsAfectadas = new Set();
+    this.resultado = null;
+    this.error = null;
+    this.fase = 'lista';
+  }
+
+  // ── Flujo interno ──────────────────────────────────────────────────────
+
+  habilitarVentana(): void {
+    this.ventanaHabilitada = true;
+    this.abrirVentana();
+  }
+
   get bolsinesFiltrados(): BolsinDto[] {
     return this.bolsines.filter((b) => {
       const matchPrecinto =
@@ -86,24 +146,11 @@ export class PantallaRegRecepcionComponent implements OnInit {
     });
   }
 
-  // ── Paso 5: seleccionarBolsin ──────────────────────────────────────────
-  seleccionarBolsin(bolsin: BolsinDto): void {
-    this.bolsinSeleccionado = bolsin;
-    this.opcionGlobal = null;
-    this.docsAfectadas = new Set();
-    this.resultado = null;
-    this.error = null;
-    this.fase = 'opcion';
-  }
-
-  // ── Paso 7→8: elegir opción global ────────────────────────────────────
   elegirOpcion(): void {
     if (!this.opcionGlobal) return;
     if (this.opcionGlobal === 1) {
-      // Opción 1: todo aceptado, ir directo a confirmación
       this.confirmar();
     } else {
-      // Opciones 2/3/4: marcar cuáles docs están afectadas
       this.docsAfectadas = new Set();
       this.fase = 'marcar';
     }
@@ -125,7 +172,6 @@ export class PantallaRegRecepcionComponent implements OnInit {
     return this.bolsinSeleccionado?.remitos.flatMap((r) => r.documentaciones) ?? [];
   }
 
-  // ── Paso 9-10: confirmar ───────────────────────────────────────────────
   confirmar(): void {
     if (!this.bolsinSeleccionado || !this.opcionGlobal) return;
 
@@ -136,18 +182,18 @@ export class PantallaRegRecepcionComponent implements OnInit {
     this.error = null;
 
     const payload = {
-      usuarioId: 1,
+      usuarioId: this.service.usuarioId,
       bolsinId: this.bolsinSeleccionado.id,
       opciones: this.buildOpciones(),
     };
 
     this.service.recepcionar(payload).subscribe({
-      next: (res) => {
+      next: () => {
         this.procesando = false;
-        this.resultado = `Bolsín ${res.nroBolsin} recepcionado exitosamente.`;
-        this.fase = 'lista';
+        this.notificarOperacionExitosa();
         this.bolsinSeleccionado = null;
         this.opcionGlobal = null;
+        this.fase = 'lista';
         this.cdr.detectChanges();
         this.abrirVentana();
       },
@@ -159,22 +205,10 @@ export class PantallaRegRecepcionComponent implements OnInit {
     });
   }
 
-  // ── Paso cancelar (Obs. 1) ─────────────────────────────────────────────
-  cancelar(): void {
-    this.bolsinSeleccionado = null;
-    this.opcionGlobal = null;
-    this.docsAfectadas = new Set();
-    this.resultado = null;
-    this.error = null;
-    this.fase = 'lista';
-  }
-
   volverAOpciones(): void {
     this.fase = 'opcion';
     this.docsAfectadas = new Set();
   }
-
-  // ── Helpers ────────────────────────────────────────────────────────────
 
   private buildOpciones(): OpcionRecepcionRequest[] {
     return this.todasLasDocumentaciones().map((doc) => ({
