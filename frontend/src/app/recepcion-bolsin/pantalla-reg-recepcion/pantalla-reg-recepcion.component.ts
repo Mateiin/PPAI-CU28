@@ -174,6 +174,13 @@ export class PantallaRegRecepcionComponent implements OnInit {
     this.docsAfectadas = new Set();
   }
 
+  volverAlInicio(): void {
+    localStorage.clear();
+    sessionStorage.clear();
+    history.replaceState(null, '', 'location.origin');
+    location.reload();
+  }
+
   // ── Helpers ────────────────────────────────────────────────────────────
 
   private buildOpciones(): OpcionRecepcionRequest[] {

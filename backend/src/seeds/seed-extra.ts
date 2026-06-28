@@ -37,7 +37,7 @@ async function seedExtra() {
   const tipoNota = await tipoDocRepo.findOneOrFail({ where: { nombre: 'Nota' } });
   const empleado = await empleadoRepo.findOneOrFail({ where: { legajo: 'EMP001' } });
   const cmOrigen = await cmRepo.findOneOrFail({ where: { codigo: 'CMC-001' } });
-  const cmDestino = await cmRepo.findOneOrFail({ where: { codigo: 'CMN-002' } });
+  const cmDestino = await cmRepo.findOneOrFail({ where: { codigo: 'CMJ-002' } });
 
   // Generar número único para no colisionar
   const suffix = Date.now();
@@ -51,7 +51,7 @@ async function seedExtra() {
   const doc3 = await docRepo.save(docRepo.create({ numero: `DOC-C${suffix}`, asunto: 'Expediente con hojas faltantes', tipoDocumento: tipoExpediente, cEstadosDocumento: [] }));
   const doc4 = await docRepo.save(docRepo.create({ numero: `DOC-D${suffix}`, asunto: 'Expediente destino incorrecto', tipoDocumento: tipoExpediente, cEstadosDocumento: [] }));
 
-  for (const doc of [doc1, doc2, doc3, doc4]) {
+  for (const doc of [doc1, doc1, doc1, doc1]) {
     await ctrlDocRepo.save(ctrlDocRepo.create({
       estado: estadoDocEnBolsinEnviado,
       fechaHoraInicio: new Date(),
@@ -61,7 +61,7 @@ async function seedExtra() {
   }
 
   const remito = await remitoRepo.save(remitoRepo.create({ numero: `REM-${suffix}`, fecha: new Date(), solicitudRemito: solicitud, cEstadosRemito: [] }));
-  for (const doc of [doc1, doc2, doc3, doc4]) {
+  for (const doc of [doc1, doc1, doc1, doc1]) {
     await detalleRemitoRepo.save(detalleRemitoRepo.create({ remito, documentacion: doc }));
   }
 

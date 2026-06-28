@@ -1,3 +1,6 @@
+<link
+  href="https://fonts.googleapis.com/icon?family=Material+Icons"
+  rel="stylesheet">
 <section class="pantalla">
   <h1>Registrar Recepción de Bolsín</h1>
 
@@ -33,8 +36,19 @@
       <p>Cargando bolsines...</p>
     } @else {
       <div class="filtros">
-        <input [(ngModel)]="filtroPrecinto" placeholder="Filtrar por N° precinto" />
-        <input [(ngModel)]="filtroCMOrigen" placeholder="Filtrar por CM origen" />
+        <div class="campo-grupo">
+         <label for="precinto">Número Precinto</label>
+        <!-- <input [(ngModel)]="filtroPrecinto" placeholder="Ej: 1782674391714" /> -->
+            <input [(ngModel)]="filtroPrecinto"  id="precinto" placeholder="Ej: 1782674391714">
+        </div>
+        <div class="campo-grupo">
+         <label for="origen">CM Origen</label>
+        <!-- <input [(ngModel)]="filtroCMOrigen" placeholder="Ej: Central" /> -->
+            <input [(ngModel)]="filtroCMOrigen" id="origen" placeholder="Ej: Central">
+        </div>
+        <button class="btn-principal" (click)="volverAlInicio()">
+        Volver
+      </button>
       </div>
 
       @if (bolsinesFiltrados.length === 0) {
@@ -43,25 +57,48 @@
         <table class="tabla">
           <thead>
             <tr>
-              <th>N° Bolsín</th>
-              <th>Fecha</th>
+              <!-- <th>N° Bolsín</th> -->
+              <!-- <th>Fecha</th> -->
               <th>Precinto</th>
               <th>CM Origen</th>
-              <th>CM Destino</th>
-              <th>Acción</th>
+              <!-- <th>CM Destino</th> -->
+              <!-- <th>Acción</th> -->
+               <!-- <th class="col-accion">Acción</th> -->
             </tr>
           </thead>
           <tbody>
             @for (b of bolsinesFiltrados; track b.id) {
               <tr>
-                <td>{{ b.nroBolsin }}</td>
-                <td>{{ b.fecha | date:'dd/MM/yyyy' }}</td>
+                <!-- <td>{{ b.nroBolsin }}</td> -->
+                <!-- <td>{{ b.fecha | date:'dd/MM/yyyy' }}</td> -->
                 <td>{{ b.nroPrecinto ?? '-' }}</td>
                 <td>{{ b.cmOrigen ?? '-' }}</td>
-                <td>{{ b.cmDestino ?? '-' }}</td>
-                <td>
-                  <button (click)="seleccionarBolsin(b)">Seleccionar</button>
-                </td>
+                <!-- <td>{{ b.cmDestino ?? '-' }}</td> -->
+                <!-- <td> -->
+                  <!-- <button (click)="seleccionarBolsin(b)">Seleccionar</button> -->
+                <!-- </td> -->
+                 
+                
+                <!-- <td class="col-accion">
+    <button class="btn-seleccionar"
+            (click)="seleccionarBolsin(b)">
+        Seleccionar
+    </button> 
+</td>-->
+    <td class="col-accion">
+    <button
+        class="btn-icono"
+        type="button"
+        (click)="seleccionarBolsin(b)"
+        title="Ver bolsín">
+        <!-- <i class="bi bi-eye-fill"></i> -->
+        <!-- <i class="pi pi-eye"></i> -->
+        <span class="material-icons">
+visibility
+</span>
+    </button>
+</td>
+
               </tr>
             }
           </tbody>

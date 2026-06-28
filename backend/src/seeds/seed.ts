@@ -60,7 +60,7 @@ async function seed() {
 
   // ── Comisiones Médicas ───────────────────────────────────────────────────
   const cmOrigen = await cmRepo.save(cmRepo.create({ nombre: 'CM Central', codigo: 'CMC-001', email: 'central@hospital.com', telefono: '0351-111111' }));
-  const cmDestino = await cmRepo.save(cmRepo.create({ nombre: 'CM Norte', codigo: 'CMN-002', email: 'norte@hospital.com', telefono: '0351-222222' }));
+  const cmDestino = await cmRepo.save(cmRepo.create({ nombre: 'CM Villa María', codigo: 'CMJ-002', email: 'villamaría@hospital.com', telefono: '0353-222222' }));
 
   // ── Empleado + Usuario + Sesión activa ──────────────────────────────────
   const empleado = await empleadoRepo.save(empleadoRepo.create({ nombre: 'Ana', apellido: 'González', legajo: 'EMP001', email: 'ana@hospital.com', cmAsignada: cmDestino }));
