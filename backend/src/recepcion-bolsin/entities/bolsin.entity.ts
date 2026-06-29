@@ -3,10 +3,10 @@ import {
   OneToMany, ManyToOne, JoinColumn,
 } from 'typeorm';
 import { Remito } from './remito.entity';
-import { Empleado } from './empleado.entity';
 import { ComisionMedica } from './comision-medica.entity';
 import { CambioEstadoBolsin } from './control-estado-bolsin.entity';
 import { Estado } from './estado.entity';
+import { Empleado } from './empleado.entity';
 
 @Entity('bolsin')
 export class Bolsin {
@@ -26,16 +26,12 @@ export class Bolsin {
   nroPrecinto: string | null;
 
   @ManyToOne(() => ComisionMedica, { nullable: true, eager: true })
-  @JoinColumn({ name: 'cm_destino_id' })
-  cmDestino: ComisionMedica | null;
+  @JoinColumn({ name: 'destino_id' })
+  destino: ComisionMedica | null;
 
   @ManyToOne(() => ComisionMedica, { nullable: true, eager: true })
-  @JoinColumn({ name: 'cm_origen_id' })
-  cmOrigen: ComisionMedica | null;
-
-  @ManyToOne(() => Empleado, { nullable: true, eager: true })
-  @JoinColumn({ name: 'empleado_responsable_id' })
-  empleadoResponsable: Empleado | null;
+  @JoinColumn({ name: 'origen_id' })
+  origen: ComisionMedica | null;
 
   @OneToMany(() => Remito, (r) => r.bolsin, { eager: true })
   remitos: Remito[];
@@ -45,46 +41,60 @@ export class Bolsin {
 
   // ── Métodos de dominio ──────────────────────────────────────────────────
 
+  // 49.getCambioEstadoActual()
   getCambioEstadoActual(): CambioEstadoBolsin | null {
     if (!this.cEstadosBolsin?.length) return null;
     return this.cEstadosBolsin.reduce((prev, curr) =>
       curr.fechaHoraInicio > prev.fechaHoraInicio ? curr : prev,
     );
   }
-
+  // 12.sosEnviado()
   sosEnviado(): boolean {
     return this.getCambioEstadoActual()?.sosEnviado() ?? false;
   }
 
+  // 16.esTuCMDestino()
   esTuCMDestino(cm: ComisionMedica): boolean {
-    return this.cmDestino?.id === cm.id;
+    return this.destino?.id === cm.id;
   }
 
+  // 17.getCMOrigen()
   getCMOrigen(): ComisionMedica | null {
-    return this.cmOrigen;
+    return this.origen;
   }
 
+  //18.getNroPrecinto()
   getNroPrecinto(): string | null {
     return this.nroPrecinto;
   }
 
+  //24.obtenerInformacionRemito()
   obtenerInformacionRemito(): Remito[] {
     return this.remitos;
   }
 
-  crearCEBolsin(fechaHoraInicio: Date, empleado: Empleado, estado: Estado): CambioEstadoBolsin {
+  //51.crearCEBolsin()
+  crearCEBolsin(fecha: Date, estado: Estado, empleado:Empleado): void {
     const actual = this.getCambioEstadoActual();
     if (actual && actual.sosUltimo()) {
-      actual.setFechaHoraFin(fechaHoraInicio);
+      actual.setFechaHoraFin(fecha);
     }
+    this.new(fecha,estado,empleado)
+  }
 
+    // .registrarRecepcion()
+  registrarRecepcion(estado: Estado, fechaHoraActual: Date, empleado: Empleado): void {
+    this.new(fechaHoraActual, estado, empleado);
+  }
+
+  new(fechaHoraActual: Date, estado: Estado, empleado: Empleado): CambioEstadoBolsin {
+  // new(fechaHoraActual,estado,empleado){
     const nuevo = new CambioEstadoBolsin();
-    nuevo.fechaHoraInicio = fechaHoraInicio;
+    nuevo.fechaHoraInicio = fechaHoraActual;
     nuevo.fechaHoraFin = null;
-    nuevo.logEmpleado = empleado.getNombreCompleto();
-    nuevo.responsableCE = empleado;
     nuevo.estado = estado;
     nuevo.bolsin = this;
+    nuevo.responsableCE = empleado;
     this.cEstadosBolsin.push(nuevo);
     return nuevo;
   }

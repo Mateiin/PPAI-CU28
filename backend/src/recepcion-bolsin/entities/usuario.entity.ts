@@ -13,13 +13,14 @@ export class Usuario {
   @Column({ name: 'password' })
   hashPassword: string;
 
-  @ManyToOne(() => Empleado, (e) => e.usuarios, { eager: true })
+  @ManyToOne(() => Empleado, (e) => e.usuario, { eager: true })
   @JoinColumn({ name: 'empleado_id' })
   empleado: Empleado;
 
   @OneToMany(() => Sesion, (s) => s.usuario)
   sesiones: Sesion[];
 
+  //6.obtenerEmpleado()
   obtenerEmpleado(): Empleado {
     return this.empleado;
   }

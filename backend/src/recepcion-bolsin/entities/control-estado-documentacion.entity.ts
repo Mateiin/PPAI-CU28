@@ -14,9 +14,6 @@ export class CambioEstadoDocumentacion {
   @Column({ name: 'fecha_hora_fin', type: 'timestamp', nullable: true })
   fechaHoraFin: Date | null;
 
-  @Column({ name: 'log_empleado', type: 'varchar', nullable: true })
-  logEmpleado: string | null;
-
   @ManyToOne(() => Estado, { eager: true })
   @JoinColumn({ name: 'estado_id' })
   estado: Estado;
@@ -29,10 +26,12 @@ export class CambioEstadoDocumentacion {
   @JoinColumn({ name: 'documentacion_id' })
   documentacion: Documentacion;
 
+  // 57.sosUltimo()
   sosUltimo(): boolean {
     return this.fechaHoraFin === null;
   }
 
+  // 58.setFechaHoraFin()
   setFechaHoraFin(fecha: Date): void {
     this.fechaHoraFin = fecha;
   }

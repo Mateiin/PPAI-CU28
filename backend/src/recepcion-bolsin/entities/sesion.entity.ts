@@ -16,12 +16,8 @@ export class Sesion {
   @JoinColumn({ name: 'usuario_id' })
   usuario: Usuario;
 
-  estaActiva(): boolean {
-    return this.fechaHoraFin === null;
-  }
-
-  static buscarUsuarioLogueado(sesiones: Sesion[]): Usuario | null {
-    const activa = sesiones.find((s) => s.estaActiva());
-    return activa ? activa.usuario : null;
+  // 5.buscarUsuarioLogueado()
+  buscarUsuarioLogueado(): Usuario {
+    return this.usuario;
   }
 }

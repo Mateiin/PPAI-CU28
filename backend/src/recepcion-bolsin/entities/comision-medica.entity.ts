@@ -15,12 +15,16 @@ export class ComisionMedica {
   @Column({ name: 'email', type: 'varchar', nullable: true })
   email: string;
 
+  @Column({ name: 'direccion', type: 'varchar', nullable: true })
+  direccion: string;
+
   @Column({ name: 'telefono', type: 'varchar', nullable: true })
   telefono: string;
 
   @OneToMany(() => Empleado, (e) => e.cmAsignada)
   empleados: Empleado[];
 
+  // 9.getNombre()
   getNombre(): string {
     return this.nombre;
   }

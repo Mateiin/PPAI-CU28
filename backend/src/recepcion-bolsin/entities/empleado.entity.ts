@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, OneToOne, ManyToOne, JoinColumn } from 'typeorm';
 import { Usuario } from './usuario.entity';
 import { ComisionMedica } from './comision-medica.entity';
 
@@ -13,9 +13,6 @@ export class Empleado {
   @Column({ name: 'apellido' })
   apellido: string;
 
-  @Column({ name: 'legajo', unique: true })
-  legajo: string;
-
   @Column({ name: 'email', type: 'varchar', nullable: true })
   email: string | null;
 
@@ -23,13 +20,13 @@ export class Empleado {
   @JoinColumn({ name: 'cm_asignada_id' })
   cmAsignada: ComisionMedica | null;
 
-  @OneToMany(() => Usuario, (u) => u.empleado)
-  usuarios: Usuario[];
+  // @Column({ name: 'usuario', type: 'varchar'})
+  // usuario: Usuario;
+  @OneToOne(() => Usuario, (u) => u.empleado)
+  usuario: Usuario;
 
-  getNombreCompleto(): string {
-    return `${this.nombre} ${this.apellido}`;
-  }
 
+  //8.getCM()
   getCM(): ComisionMedica | null {
     return this.cmAsignada;
   }

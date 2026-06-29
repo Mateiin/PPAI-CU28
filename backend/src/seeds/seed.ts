@@ -9,7 +9,6 @@ import { TipoDocumento } from '../recepcion-bolsin/entities/tipo-documento.entit
 import { Empleado } from '../recepcion-bolsin/entities/empleado.entity';
 import { Usuario } from '../recepcion-bolsin/entities/usuario.entity';
 import { Sesion } from '../recepcion-bolsin/entities/sesion.entity';
-import { SolicitudRemito } from '../recepcion-bolsin/entities/solicitud-remito.entity';
 import { Remito } from '../recepcion-bolsin/entities/remito.entity';
 import { DetalleRemito } from '../recepcion-bolsin/entities/detalle-remito.entity';
 import { Documentacion } from '../recepcion-bolsin/entities/documentacion.entity';
@@ -26,7 +25,6 @@ async function seed() {
   const empleadoRepo: Repository<Empleado> = app.get(getRepositoryToken(Empleado));
   const usuarioRepo: Repository<Usuario> = app.get(getRepositoryToken(Usuario));
   const sesionRepo: Repository<Sesion> = app.get(getRepositoryToken(Sesion));
-  const solicitudRemitoRepo: Repository<SolicitudRemito> = app.get(getRepositoryToken(SolicitudRemito));
   const remitoRepo: Repository<Remito> = app.get(getRepositoryToken(Remito));
   const detalleRemitoRepo: Repository<DetalleRemito> = app.get(getRepositoryToken(DetalleRemito));
   const docRepo: Repository<Documentacion> = app.get(getRepositoryToken(Documentacion));
@@ -63,16 +61,13 @@ async function seed() {
   const cmDestino = await cmRepo.save(cmRepo.create({ nombre: 'CM Villa María', codigo: 'CMJ-002', email: 'villamaría@hospital.com', telefono: '0353-222222' }));
 
   // ── Empleado + Usuario + Sesión activa ──────────────────────────────────
-  const empleado = await empleadoRepo.save(empleadoRepo.create({ nombre: 'Ana', apellido: 'González', legajo: 'EMP001', email: 'ana@hospital.com', cmAsignada: cmDestino }));
+  const empleado = await empleadoRepo.save(empleadoRepo.create({ nombre: 'Ana', apellido: 'González', email: 'ana@hospital.com', cmAsignada: cmDestino }));
   const usuario = await usuarioRepo.save(usuarioRepo.create({ nombreUsuario: 'ana.gonzalez', hashPassword: '1234', empleado }));
   const sesion = await sesionRepo.save(sesionRepo.create({ fechaHoraInicio: new Date(), fechaHoraFin: null, usuario }));
 
   // ── Tipos de documento ──────────────────────────────────────────────────
   const tipoExpediente = await tipoDocRepo.save(tipoDocRepo.create({ nombre: 'Expediente', descripcion: 'Expediente administrativo' }));
   const tipoEstudioMedico = await tipoDocRepo.save(tipoDocRepo.create({ nombre: 'EstudioMedico', descripcion: 'Estudio médico' }));
-
-  // ── Solicitud de remito ─────────────────────────────────────────────────
-  const solicitud = await solicitudRemitoRepo.save(solicitudRemitoRepo.create({ numero: 'SR-001', fecha: new Date('2026-06-20') }));
 
   // ── Documentaciones ─────────────────────────────────────────────────────
   const doc1 = await docRepo.save(docRepo.create({ numero: 'DOC-001', asunto: 'Expediente 123 - correcta', tipoDocumento: tipoExpediente, cEstadosDocumento: [] }));
@@ -86,9 +81,9 @@ async function seed() {
   }
 
   // ── Remito + DetalleRemito ──────────────────────────────────────────────
-  const remito = await remitoRepo.save(remitoRepo.create({ numero: 'REM-001', fecha: new Date('2026-06-21'), solicitudRemito: solicitud, cEstadosRemito: [] }));
+  const remito = await remitoRepo.save(remitoRepo.create({ numero: 'REM-001', fecha: new Date('2026-06-21')}));
   for (const doc of [doc1, doc2, doc3, doc4]) {
-    await detalleRemitoRepo.save(detalleRemitoRepo.create({ remito, documentacion: doc }));
+    await detalleRemitoRepo.save(detalleRemitoRepo.create({ nombre: doc.numero, remito, documentacion: doc }));
   }
 
   // ── Bolsín en estado EnBolsinEnviado ────────────────────────────────────
@@ -97,21 +92,21 @@ async function seed() {
     fecha: new Date('2026-06-21'),
     peso: 2.5,
     nroPrecinto: 'PREC-001',
-    cmOrigen,
-    cmDestino,
-    empleadoResponsable: empleado,
+    origen:cmOrigen,
+    destino:cmDestino,
     cEstadosBolsin: [],
   }));
 
   // Asociar remito al bolsín
   remito.bolsin = bolsin;
   await remitoRepo.save(remito);
+  
 
   await ctrlBolsinRepo.save(ctrlBolsinRepo.create({
     estado: estadoEnBolsinEnviado,
     fechaHoraInicio: new Date('2026-06-21T08:00:00'),
     fechaHoraFin: null,
-    logEmpleado: empleado.getNombreCompleto(),
+    // logEmpleado: empleado.getNombreCompleto(),
     responsableCE: empleado,
     bolsin,
   }));

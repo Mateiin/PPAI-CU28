@@ -15,6 +15,7 @@ export class TipoDocumento {
   @OneToMany(() => Documentacion, (doc) => doc.tipoDocumento)
   documentaciones: Documentacion[];
 
+  //29.getNombre()
   getNombre(): string {
     return this.nombre;
   }

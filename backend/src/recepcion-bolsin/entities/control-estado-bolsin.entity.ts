@@ -14,9 +14,6 @@ export class CambioEstadoBolsin {
   @Column({ name: 'fecha_hora_fin', type: 'timestamp', nullable: true })
   fechaHoraFin: Date | null;
 
-  @Column({ name: 'log_empleado', type: 'varchar', nullable: true })
-  logEmpleado: string;
-
   @ManyToOne(() => Estado, { eager: true })
   @JoinColumn({ name: 'estado_id' })
   estado: Estado;
@@ -29,18 +26,22 @@ export class CambioEstadoBolsin {
   @JoinColumn({ name: 'bolsin_id' })
   bolsin: Bolsin;
 
+  // 13.sosUltimo()
   sosUltimo(): boolean {
     return this.fechaHoraFin === null;
   }
 
+  // 50.setFechaHoraFin()
   setFechaHoraFin(fecha: Date): void {
     this.fechaHoraFin = fecha;
   }
 
+  // 14.sosEnviado()
   sosEnviado(): boolean {
     return this.estado?.esEnviado() ?? false;
   }
 }
+
 
 // Alias para compatibilidad con imports existentes
 export { CambioEstadoBolsin as ControlEstadoBolsin };

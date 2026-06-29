@@ -30,7 +30,7 @@ export class Documentacion {
   tipoDocumento: TipoDocumento;
 
   @OneToMany(() => DetalleRemito, (dr) => dr.documentacion)
-  detallesRemito: DetalleRemito[];
+    detallesRemito: DetalleRemito[];
 
   @OneToMany(() => CambioEstadoDocumentacion, (c) => c.documentacion, {
     cascade: true,
@@ -40,51 +40,51 @@ export class Documentacion {
 
   // ── Métodos de dominio ──────────────────────────────────────────────────
 
+  // 28.getAsunto()
   getAsunto(): string | null {
     return this.asunto;
   }
 
-  getCambioEstadoActual(): CambioEstadoDocumentacion | null {
-    if (!this.cEstadosDocumento?.length) return null;
-    return this.cEstadosDocumento.reduce((prev, curr) =>
-      curr.fechaHoraInicio > prev.fechaHoraInicio ? curr : prev,
-    );
-  }
+  // 
+  // getCambioEstadoActual(): CambioEstadoDocumentacion | null {
+  //   if (!this.cEstadosDocumento?.length) return null;
+  //   return this.cEstadosDocumento.reduce((prev, curr) =>
+  //     curr.fechaHoraInicio > prev.fechaHoraInicio ? curr : prev,
+  //   );
+  // }
 
+  //59.crearCEDoc()
   crearCEDoc(estado: Estado, fechaHoraInicio: Date, empleado: Empleado): CambioEstadoDocumentacion {
+    if (!this.cEstadosDocumento) {
+    this.cEstadosDocumento = []; // Inicializar si viene undefined
+  }
     const nuevo = new CambioEstadoDocumentacion();
     nuevo.fechaHoraInicio = fechaHoraInicio;
     nuevo.fechaHoraFin = null;
     nuevo.estado = estado;
-    nuevo.logEmpleado = empleado.getNombreCompleto();
     nuevo.responsableCE = empleado;
     nuevo.documentacion = this;
     this.cEstadosDocumento.push(nuevo);
     return nuevo;
   }
 
-  actualizarEstadoDoc(estado: Estado, empleado: Empleado): void {
-    const ahora = new Date();
-    const actual = this.getCambioEstadoActual();
-    if (actual && actual.sosUltimo()) {
-      actual.setFechaHoraFin(ahora);
-    }
-    this.crearCEDoc(estado, ahora, empleado);
-  }
 
+  //Métodos de Máquina de Estados (Clase Documentacion)
+
+  //56.aceptarDoc()
   aceptarDoc(estado: Estado, empleado: Empleado): void {
-    this.actualizarEstadoDoc(estado, empleado);
+  this.detallesRemito.forEach(dr => dr.actualizarEstadoDoc(estado, empleado)); 
   }
 
   rechazarDoc(estado: Estado, empleado: Empleado): void {
-    this.actualizarEstadoDoc(estado, empleado);
+    this.detallesRemito.forEach(dr => dr.actualizarEstadoDoc(estado, empleado));
   }
 
   registrarFaltante(estado: Estado, empleado: Empleado): void {
-    this.actualizarEstadoDoc(estado, empleado);
+    this.detallesRemito.forEach(dr => dr.actualizarEstadoDoc(estado, empleado));
   }
 
   redirigirDocumentacion(estado: Estado, empleado: Empleado): void {
-    this.actualizarEstadoDoc(estado, empleado);
+    this.detallesRemito.forEach(dr => dr.actualizarEstadoDoc(estado, empleado));
   }
 }
