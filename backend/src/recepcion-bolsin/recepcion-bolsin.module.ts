@@ -15,8 +15,9 @@ import { CambioEstadoBolsin } from './entities/control-estado-bolsin.entity';
 import { CambioEstadoDocumentacion } from './entities/control-estado-documentacion.entity';
 
 
-import { GestorRegRecepBolsin } from './gestor-reg-recep-bolsin.service';
-import { RecepcionBolsinController } from './recepcion-bolsin.controller';
+import { GestorRegRecepBolsin } from './service/gestor-reg-recep-bolsin.service';
+import { RepositoriosCU28 } from './repository/repositorios-cu28.service';
+import { RecepcionBolsinController } from './controller/recepcion-bolsin.controller';
 
 @Module({
   imports: [
@@ -36,6 +37,6 @@ import { RecepcionBolsinController } from './recepcion-bolsin.controller';
     ]),
   ],
   controllers: [RecepcionBolsinController],
-  providers: [GestorRegRecepBolsin],
+  providers: [RepositoriosCU28, GestorRegRecepBolsin],
 })
 export class RecepcionBolsinModule {}

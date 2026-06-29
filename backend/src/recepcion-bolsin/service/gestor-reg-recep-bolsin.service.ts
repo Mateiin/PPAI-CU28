@@ -1,16 +1,13 @@
 import { Injectable, NotFoundException, Scope } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 
-import { Bolsin } from './entities/bolsin.entity';
-import { Remito } from './entities/remito.entity';
-import { Documentacion } from './entities/documentacion.entity';
-import { Sesion } from './entities/sesion.entity';
-import { Estado } from './entities/estado.entity';
-import { Empleado } from './entities/empleado.entity';
-import { ComisionMedica } from './entities/comision-medica.entity';
-import { RecepcionarBolsinDto, OpcionRecepcionDto } from './dto/recepcionar-bolsin.dto';
-import { BolsinResponseDto, BolsinesListaResponseDto, ResultadoRecepcionDto } from './dto/bolsin-response.dto';
+import { Bolsin } from '../entities/bolsin.entity';
+import { Documentacion } from '../entities/documentacion.entity';
+import { Estado } from '../entities/estado.entity';
+import { Empleado } from '../entities/empleado.entity';
+import { ComisionMedica } from '../entities/comision-medica.entity';
+import { RepositoriosCU28 } from '../repository/repositorios-cu28.service';
+import { RecepcionarBolsinDto, OpcionRecepcionDto } from '../dto/recepcionar-bolsin.dto';
+import { BolsinResponseDto, BolsinesListaResponseDto, ResultadoRecepcionDto } from '../dto/bolsin-response.dto';
 
 @Injectable({ scope: Scope.REQUEST })
 export class GestorRegRecepBolsin {
@@ -32,26 +29,13 @@ export class GestorRegRecepBolsin {
 
 
   constructor(
-    @InjectRepository(Bolsin)
-    private readonly bolsinRepo: Repository<Bolsin>,
-
-    @InjectRepository(Remito)
-    private readonly remitoRepo: Repository<Remito>,
-
-    @InjectRepository(Documentacion)
-    private readonly documentacionRepo: Repository<Documentacion>,
-
-    @InjectRepository(Sesion)
-    private readonly sesionRepo: Repository<Sesion>,
-
-    @InjectRepository(Estado)
-    private readonly estadoRepo: Repository<Estado>,
+    private readonly repos: RepositoriosCU28,
   ) { }
 
   // ── Paso 4: buscar empleado logueado ───────────────────────────────────
 
   async buscarEmpleadoLogueado(usuarioId: number): Promise<Empleado> {
-    const sesiones = await this.sesionRepo.find({
+    const sesiones = await this.repos.sesionRepo.find({
       where: { usuario: { id: usuarioId } },
       relations: { usuario: { empleado: { cmAsignada: true } } },
     });
@@ -74,7 +58,7 @@ export class GestorRegRecepBolsin {
   // ── Paso 11: obtener bolsines en estado Enviado para la CM del usuario ──
   //11. obtenerBolsinesEnEstadoEnviado()
   async obtenerBolsinesEnEstadoEnviado(): Promise<Bolsin[]> {
-    const todos = await this.bolsinRepo.find({
+    const todos = await this.repos.bolsinRepo.find({
       relations: {
         cEstadosBolsin: { estado: true },
         destino: true,
@@ -181,7 +165,7 @@ export class GestorRegRecepBolsin {
     this.tomarBolsinSeleccionado(dto.bolsinId);
     this.tomarConfDeSelec(dto);
 
-    const todosLosEstados = await this.estadoRepo.find();
+    const todosLosEstados = await this.repos.estadoRepo.find();
     await this.buscarEstadoRecibidoEnCMD(todosLosEstados);
     await this.buscarEstadoRecibidoYAceptado(todosLosEstados);
     await this.buscarEstadoRecibidaYAceptada(todosLosEstados);
@@ -199,13 +183,13 @@ export class GestorRegRecepBolsin {
     // Paso 11a: actualizar estado del bolsín
     if (!this.estadoRecibidoEnCMDestino) throw new NotFoundException('Estado RecibidoEnCMDestino no encontrado');
     bolsin.registrarRecepcion(this.estadoRecibidoEnCMDestino, this.fechaHoraActual, this.empleadoLogueado!);
-    await this.bolsinRepo.save(bolsin);
+    await this.repos.bolsinRepo.save(bolsin);
 
     // Paso 11b: actualizar estado de cada remito
     if (!this.estadoRecibidoYAceptado) throw new NotFoundException('Estado RecibidoYAceptado no encontrado');
     for (const remito of bolsin.remitos) {
       remito.recibirRemito(this.estadoRecibidoYAceptado, this.fechaHoraActual);
-      await this.remitoRepo.save(remito);
+      await this.repos.remitoRepo.save(remito);
     }
 
     // Paso 11c: actualizar estado de cada documentación
@@ -214,7 +198,7 @@ export class GestorRegRecepBolsin {
         const doc = detalle.getDocumentacion();
         this.opcionSeleccionada = dto.opciones.find((o) => o.documentacionId === doc.id) ?? null;
         this.aplicarTransicionDoc(doc);
-        await this.documentacionRepo.save(doc);
+        await this.repos.documentacionRepo.save(doc);
       }
     }
 

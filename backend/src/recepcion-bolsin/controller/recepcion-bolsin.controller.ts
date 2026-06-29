@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, Query, ParseIntPipe } from '@nestjs/common';
-import { GestorRegRecepBolsin } from './gestor-reg-recep-bolsin.service';
-import { RecepcionarBolsinDto } from './dto/recepcionar-bolsin.dto';
+import { GestorRegRecepBolsin } from '../service/gestor-reg-recep-bolsin.service';
+import { RecepcionarBolsinDto } from '../dto/recepcionar-bolsin.dto';
 
 @Controller('recepcion-bolsin')
 export class RecepcionBolsinController {
