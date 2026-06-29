@@ -175,7 +175,7 @@
   </table>
 
   <div class="acciones">
-    <button (click)="confirmar()" [disabled]="procesando">
+    <button (click)="confirmarSelec()" [disabled]="procesando">
       {{ procesando ? 'Procesando...' : 'Confirmar recepción' }}
     </button>
     <button type="button" (click)="volverAOpciones()">Volver</button>

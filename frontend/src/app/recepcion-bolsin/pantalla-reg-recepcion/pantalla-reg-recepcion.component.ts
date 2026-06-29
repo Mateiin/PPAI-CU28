@@ -176,12 +176,7 @@ solicitarConfirmacion(mensaje: string = '¿Confirma el registro de la recepción
     this.service.recepcionar(payload).subscribe({
       next: (res) => {
         this.procesando = false;
-        this.resultado = `Bolsín ${res.nroBolsin} recepcionado exitosamente.`;
-        this.fase = 'lista';
-        this.bolsinSeleccionado = null;
-        this.opcionGlobal = null;
-        this.cdr.detectChanges();
-        this.abrirVentana();
+        this.notificarOperacionExitosa(res.nroBolsin);
       },
       error: () => {
         this.procesando = false;
@@ -189,6 +184,16 @@ solicitarConfirmacion(mensaje: string = '¿Confirma el registro de la recepción
         this.cdr.detectChanges();
       },
     });
+  }
+
+  // 62.notificarOperacionExitosa()
+  notificarOperacionExitosa(nroBolsin: string): void {
+    this.resultado = `Bolsín ${nroBolsin} recepcionado exitosamente.`;
+    this.fase = 'lista';
+    this.bolsinSeleccionado = null;
+    this.opcionGlobal = null;
+    this.cdr.detectChanges();
+    this.abrirVentana();
   }
 
   // ── Paso cancelar (Obs. 1) ─────────────────────────────────────────────
