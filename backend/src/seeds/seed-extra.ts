@@ -44,7 +44,7 @@ async function seedExtra() {
   const doc3 = await docRepo.save(docRepo.create({ numero: `DOC-C${suffix}`, asunto: 'Expediente con hojas faltantes', tipoDocumento: tipoExpediente, cEstadosDocumento: [] }));
   const doc4 = await docRepo.save(docRepo.create({ numero: `DOC-D${suffix}`, asunto: 'Expediente destino incorrecto', tipoDocumento: tipoExpediente, cEstadosDocumento: [] }));
 
-  for (const doc of [doc1, doc1, doc1, doc1]) {
+  for (const doc of [doc1, doc2, doc3, doc4]) {
     await ctrlDocRepo.save(ctrlDocRepo.create({
       estado: estadoDocEnBolsinEnviado,
       fechaHoraInicio: new Date(),
@@ -54,7 +54,7 @@ async function seedExtra() {
   }
 
   const remito = await remitoRepo.save(remitoRepo.create({ numero: `REM-${suffix}`, fecha: new Date()}));
-  for (const doc of [doc1, doc1, doc1, doc1]) {
+  for (const doc of [doc1, doc2, doc3, doc4]) {
     await detalleRemitoRepo.save(detalleRemitoRepo.create({nombre: doc.numero, remito, documentacion: doc }));
   }
 
