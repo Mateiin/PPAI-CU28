@@ -74,8 +74,7 @@ export class Bolsin {
   }
 
   //51.crearCEBolsin()
-  //51.crearCEBolsin()
-crearCEBolsin(fecha: Date, estado: Estado, empleado: Empleado): void {
+ crearCEBolsin(fecha: Date, estado: Estado, empleado: Empleado): void {
   if (!this.cEstadosBolsin) {
     this.cEstadosBolsin = [];
   }

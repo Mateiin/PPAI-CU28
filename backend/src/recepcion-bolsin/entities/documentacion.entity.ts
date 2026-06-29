@@ -45,14 +45,6 @@ export class Documentacion {
     return this.asunto;
   }
 
-  // 
-  // getCambioEstadoActual(): CambioEstadoDocumentacion | null {
-  //   if (!this.cEstadosDocumento?.length) return null;
-  //   return this.cEstadosDocumento.reduce((prev, curr) =>
-  //     curr.fechaHoraInicio > prev.fechaHoraInicio ? curr : prev,
-  //   );
-  // }
-
   //59.crearCEDoc()
   crearCEDoc(estado: Estado, fechaHoraInicio: Date, empleado: Empleado): CambioEstadoDocumentacion {
     if (!this.cEstadosDocumento) {
@@ -67,7 +59,6 @@ export class Documentacion {
     this.cEstadosDocumento.push(nuevo);
     return nuevo;
   }
-
 
   //Métodos de Máquina de Estados (Clase Documentacion)
 

@@ -44,23 +44,25 @@ export class PantallaRegRecepcionComponent implements OnInit {
   constructor(
     private readonly service: RecepcionBolsinService,
     private readonly cdr: ChangeDetectorRef,
-  ) {}
+  ) { }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
   // ── Paso 1: el EB selecciona la opción ────────────────────────────────
-  habilitarVentana(): void {
+  // 1.opcionRegistrarRecepcionDeBolsin()
+  opcionRegistrarRecepcionDeBolsin(): void {
     this.ventanaHabilitada = true;
     this.abrirVentana();
   }
 
   // ── Paso 2: abrirVentana ───────────────────────────────────────────────
+  // 2.abrirVentana()
   abrirVentana(): void {
     this.cargando = true;
     this.error = null;
     this.service.getBolsinesARecepcionar().subscribe({
       next: (data) => {
-        this.nombreCM = data.cmUsuario;
+        this.mostrarCMDelUsuario(data.cmUsuario)
         this.bolsines = data.bolsines;
         this.cargando = false;
         this.cdr.detectChanges();
@@ -73,8 +75,14 @@ export class PantallaRegRecepcionComponent implements OnInit {
     });
   }
 
+  // 10.mostrarCMDelUsuario()
+  mostrarCMDelUsuario(cm: string | null): void {
+    this.nombreCM = cm; // Asigna y queda disponible para el template
+  }
+
   // ── Filtro para A1/A2 ──────────────────────────────────────────────────
-  get bolsinesFiltrados(): BolsinDto[] {
+  // 20.mostrarListadoBolsines()
+  mostrarListadoBolsines(): BolsinDto[] {
     return this.bolsines.filter((b) => {
       const matchPrecinto =
         !this.filtroPrecinto ||
@@ -87,6 +95,7 @@ export class PantallaRegRecepcionComponent implements OnInit {
   }
 
   // ── Paso 5: seleccionarBolsin ──────────────────────────────────────────
+  // 21.seleccionarBolsin()
   seleccionarBolsin(bolsin: BolsinDto): void {
     this.bolsinSeleccionado = bolsin;
     this.opcionGlobal = null;
@@ -125,6 +134,22 @@ export class PantallaRegRecepcionComponent implements OnInit {
     return this.bolsinSeleccionado?.remitos.flatMap((r) => r.documentaciones) ?? [];
   }
 
+  // 30.mostrarRemitosYDocumentacion()
+  mostrarRemitosYDocumentacion(): { numero: string; documentaciones: DocumentacionDto[] }[] {
+    return this.bolsinSeleccionado?.remitos.map((r) => ({
+      numero: r.numero,
+      documentaciones: r.documentaciones,
+    })) ?? [];
+  }
+
+  // 31.mostrarOpcionesDeRecepcion()
+  mostrarOpcionesDeRecepcion(): { valor: number; etiqueta: string }[] {
+    return this.opcionesRecepcion;
+  }
+  // 32.seleccionarOpcionDeRecepcion()
+  seleccionarOpcionDeRecepcion(valor: number): void {
+  this.opcionGlobal = valor;
+  }
   // ── Paso 9-10: confirmar ───────────────────────────────────────────────
   confirmar(): void {
     if (!this.bolsinSeleccionado || !this.opcionGlobal) return;

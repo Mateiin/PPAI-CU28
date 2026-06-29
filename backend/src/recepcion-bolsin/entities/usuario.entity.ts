@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToOne, OneToMany, JoinColumn } from 'typeorm';
 import { Empleado } from './empleado.entity';
 import { Sesion } from './sesion.entity';
 
@@ -13,7 +13,7 @@ export class Usuario {
   @Column({ name: 'password' })
   hashPassword: string;
 
-  @ManyToOne(() => Empleado, (e) => e.usuario, { eager: true })
+  @OneToOne(() => Empleado, (e) => e.usuario, { eager: true })
   @JoinColumn({ name: 'empleado_id' })
   empleado: Empleado;
 

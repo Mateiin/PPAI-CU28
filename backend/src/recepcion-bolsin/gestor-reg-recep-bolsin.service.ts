@@ -20,12 +20,15 @@ export class GestorRegRecepBolsin {
   private listaBolsinesEnviados: Bolsin[] = [];
   private datosRemitosYDocumentacion: object[] = [];
   private bolsinSeleccionado: Bolsin | null = null;
+  private opcionSeleccionada: OpcionRecepcionDto | null = null;
   private estadoRecibidoEnCMDestino: Estado | null = null;
   private estadoRecibidoYAceptado: Estado | null = null;
   private estadoDocRecibidaYAceptada: Estado | null = null;
   private estadoDocNoRecibida: Estado | null = null;
   private estadoDocRecibidaYRechazada: Estado | null = null;
   private estadoDocParaRedirigir: Estado | null = null;
+  private fechaHoraActual: Date | null = null;
+
 
   constructor(
     @InjectRepository(Bolsin)
@@ -51,11 +54,6 @@ export class GestorRegRecepBolsin {
       where: { usuario: { id: usuarioId } },
       relations: { usuario: { empleado: { cmAsignada: true } } },
     });
-    // const sesion = new Sesion();
-    // const usuario = sesion.buscarUsuarioLogueado();
-    // if (!usuario) throw new NotFoundException('No hay sesión activa');
-    // this.empleadoLogueado = usuario.obtenerEmpleado();
-    // return this.empleadoLogueado;
     const sesion = sesiones.find(s => s.fechaHoraFin === null); // la sesión activa
     if (!sesion) throw new NotFoundException('No hay sesión activa');
     const usuario = sesion.buscarUsuarioLogueado();
@@ -66,13 +64,14 @@ export class GestorRegRecepBolsin {
 
   // ── Paso 7: buscar CM destino del usuario ──────────────────────────────
 
-  buscarCMDestinoDelUsuario(): ComisionMedica | null {
+  //7. buscarCMDelUsuario()
+  buscarCMDelUsuario(): ComisionMedica | null {
     this.cmDestinoEmpleado = this.empleadoLogueado?.getCM() ?? null;
     return this.cmDestinoEmpleado;
   }
 
   // ── Paso 11: obtener bolsines en estado Enviado para la CM del usuario ──
-
+  //11. obtenerBolsinesEnEstadoEnviado()
   async obtenerBolsinesEnEstadoEnviado(): Promise<Bolsin[]> {
     const todos = await this.bolsinRepo.find({
       relations: {
@@ -99,21 +98,28 @@ export class GestorRegRecepBolsin {
   }
 
   // ── Paso 20: listar bolsines ───────────────────────────────────────────
-
+  //19. listarBolsines()
   listarBolsines(): BolsinResponseDto[] {
     return this.listaBolsinesEnviados.map((b) => this.mapBolsinToDto(b));
   }
 
   // ── Paso 23: tomar bolsín seleccionado ────────────────────────────────
 
+  //22. tomarBolsinSeleccionado()
   tomarBolsinSeleccionado(bolsinId: number): void {
     const encontrado = this.listaBolsinesEnviados.find((b) => b.id === bolsinId);
     if (!encontrado) throw new NotFoundException(`Bolsín ${bolsinId} no está en la lista`);
     this.bolsinSeleccionado = encontrado;
   }
 
+  //33.tomarOpcionDeRecepcionSeleccionada()
+  tomarOpcionDeRecepcionSeleccionada(dto: RecepcionarBolsinDto, docId: number): void {
+  this.opcionSeleccionada = dto.opciones.find((o) => o.documentacionId === docId) ?? null;
+  }
+  
   // ── Paso 24-30: obtener información de remitos y docs ─────────────────
 
+  //23.obtenerInformacionRemito()
   obtenerInformacionRemito(): object {
     if (!this.bolsinSeleccionado) throw new NotFoundException('No hay bolsín seleccionado');
     this.datosRemitosYDocumentacion = this.bolsinSeleccionado.remitos.map((r) => ({
@@ -153,11 +159,11 @@ export class GestorRegRecepBolsin {
     return new Date();
   }
 
-  // ── Paso 49: registrar recepción (orquestador principal) ───────────────
+  // ── Paso 37: registrar recepción (orquestador principal) ───────────────
 
   async registrarRecepcionDeBolsin(dto: RecepcionarBolsinDto): Promise<ResultadoRecepcionDto> {
     await this.buscarEmpleadoLogueado(dto.usuarioId);
-    this.buscarCMDestinoDelUsuario();
+    this.buscarCMDelUsuario();
     await this.obtenerBolsinesEnEstadoEnviado();
     this.tomarBolsinSeleccionado(dto.bolsinId);
 
@@ -174,17 +180,17 @@ export class GestorRegRecepBolsin {
       todosLosEstados.find((e) => e.esAmbitoDocumentacion() && e.nombre === 'ParaRedirigir') ?? null;
 
     const bolsin = this.bolsinSeleccionado!;
-    const fechaHoraActual = this.obtenerFechaHoraActual();
+    this.fechaHoraActual = this.obtenerFechaHoraActual();
 
     // Paso 11a: actualizar estado del bolsín
     if (!this.estadoRecibidoEnCMDestino) throw new NotFoundException('Estado RecibidoEnCMDestino no encontrado');
-    bolsin.crearCEBolsin(fechaHoraActual, this.estadoRecibidoEnCMDestino, this.empleadoLogueado!);
+    bolsin.registrarRecepcion(this.estadoRecibidoEnCMDestino, this.fechaHoraActual, this.empleadoLogueado!);
     await this.bolsinRepo.save(bolsin);
 
     // Paso 11b: actualizar estado de cada remito
     if (!this.estadoRecibidoYAceptado) throw new NotFoundException('Estado RecibidoYAceptado no encontrado');
     for (const remito of bolsin.remitos) {
-      remito.recibirRemito(this.estadoRecibidoYAceptado, fechaHoraActual);
+      remito.recibirRemito(this.estadoRecibidoYAceptado, this.fechaHoraActual);
       await this.remitoRepo.save(remito);
     }
 
@@ -192,8 +198,8 @@ export class GestorRegRecepBolsin {
     for (const remito of bolsin.remitos) {
       for (const detalle of remito.detallesRemito) {
         const doc = detalle.getDocumentacion();
-        const opcion = dto.opciones.find((o) => o.documentacionId === doc.id);
-        this.aplicarTransicionDoc(doc, opcion);
+        this.opcionSeleccionada = dto.opciones.find((o) => o.documentacionId === doc.id) ?? null;
+        this.aplicarTransicionDoc(doc);
         await this.documentacionRepo.save(doc);
       }
     }
@@ -204,9 +210,9 @@ export class GestorRegRecepBolsin {
 
   // ── Helpers ────────────────────────────────────────────────────────────
 
-  private aplicarTransicionDoc(doc: Documentacion, opcion: OpcionRecepcionDto | undefined): void {
+  private aplicarTransicionDoc(doc: Documentacion): void {
     const empleado = this.empleadoLogueado!;
-    switch (opcion?.opcion) {
+    switch (this.opcionSeleccionada?.opcion) {
       case 'rechazar': doc.rechazarDoc(this.estadoDocRecibidaYRechazada!, empleado); break;
       case 'faltante': doc.registrarFaltante(this.estadoDocNoRecibida!, empleado); break;
       case 'redirigir': doc.redirigirDocumentacion(this.estadoDocParaRedirigir!, empleado); break;
@@ -218,48 +224,32 @@ export class GestorRegRecepBolsin {
     // Extensión a CU de notificación (fuera del alcance del CU28)
   }
 
-  // private finCU(bolsin: Bolsin): ResultadoRecepcionDto {
-  //   return {
-  //     bolsinId: bolsin.id,
-  //     nroBolsin: bolsin.nroBolsin,
-  //     estadoFinal: bolsin.getCambioEstadoActual()?.estado?.nombre ?? null,
-  //     documentacionesProcesadas: bolsin.remitos
-  //       .flatMap((r) => r.detallesRemito)
-  //       .map((dr) => {
-  //         const doc = dr.getDocumentacion();
-  //         return {
-  //           id: doc.id,
-  //           numero: doc.numero,
-  //         };
-  //       }),
-  //   };
-  // }
   private finCU(bolsin: Bolsin): ResultadoRecepcionDto {
-  return {
-    bolsinId: bolsin.id,
-    nroBolsin: bolsin.nroBolsin,
-    estadoFinal: bolsin.getCambioEstadoActual()?.estado?.nombre ?? null,
-    documentacionesProcesadas: bolsin.remitos
-      .flatMap((r) => r.detallesRemito)
-      .map((dr) => {
-        const doc = dr.getDocumentacion();
-        const ultimoEstado = doc.cEstadosDocumento?.reduce((prev, curr) =>  
-          curr.fechaHoraInicio > prev.fechaHoraInicio ? curr : prev,
-          doc.cEstadosDocumento[0]
-        );
-        return {
-          id: doc.id,
-          numero: doc.numero,
-          estadoFinal: ultimoEstado?.estado?.nombre ?? null, 
-        };
-      }),
-  };
-}
+    return {
+      bolsinId: bolsin.id,
+      nroBolsin: bolsin.nroBolsin,
+      estadoFinal: bolsin.getCambioEstadoActual()?.estado?.nombre ?? null,
+      documentacionesProcesadas: bolsin.remitos
+        .flatMap((r) => r.detallesRemito)
+        .map((dr) => {
+          const doc = dr.getDocumentacion();
+          const ultimoEstado = doc.cEstadosDocumento?.reduce((prev, curr) =>
+            curr.fechaHoraInicio > prev.fechaHoraInicio ? curr : prev,
+            doc.cEstadosDocumento[0]
+          );
+          return {
+            id: doc.id,
+            numero: doc.numero,
+            estadoFinal: ultimoEstado?.estado?.nombre ?? null,
+          };
+        }),
+    };
+  }
 
   // Endpoint de consulta inicial (GET)
   async getBolsinesARecepcionar(usuarioId: number): Promise<BolsinesListaResponseDto> {
     await this.buscarEmpleadoLogueado(usuarioId);
-    this.buscarCMDestinoDelUsuario();
+    this.buscarCMDelUsuario();
     await this.obtenerBolsinesEnEstadoEnviado();
     return {
       cmUsuario: this.cmDestinoEmpleado?.getNombre() ?? null,
@@ -268,30 +258,30 @@ export class GestorRegRecepBolsin {
   }
 
   private mapBolsinToDto(b: Bolsin): BolsinResponseDto {
-  return {
-    id: b.id,
-    nroBolsin: b.nroBolsin,
-    fecha: b.fecha?.toString() ?? null,
-    nroPrecinto: b.getNroPrecinto(),
-    cmOrigen: b.getCMOrigen()?.getNombre() ?? null,
-    cmDestino: b.destino?.getNombre() ?? null,
-    remitos: b.remitos.map((r) => ({
-      numero: r.getNumero(),
-      documentaciones: r.tomarDocumentacion().map((dr) => {
-        const doc = dr.getDocumentacion();
-        const ultimoEstado = doc.cEstadosDocumento?.reduce((prev, curr) =>
-          curr.fechaHoraInicio > prev.fechaHoraInicio ? curr : prev,
-          doc.cEstadosDocumento[0]
-        );
-        return {
-          id: doc.id,
-          numero: doc.numero,
-          asunto: doc.getAsunto(),
-          tipoDocumento: doc.tipoDocumento?.nombre ?? null,
-          estadoActual: ultimoEstado?.estado?.nombre ?? null,
-        };
-      }),
-    })),
-  };
-}
+    return {
+      id: b.id,
+      nroBolsin: b.nroBolsin,
+      fecha: b.fecha?.toString() ?? null,
+      nroPrecinto: b.getNroPrecinto(),
+      cmOrigen: b.getCMOrigen()?.getNombre() ?? null,
+      cmDestino: b.destino?.getNombre() ?? null,
+      remitos: b.remitos.map((r) => ({
+        numero: r.getNumero(),
+        documentaciones: r.tomarDocumentacion().map((dr) => {
+          const doc = dr.getDocumentacion();
+          const ultimoEstado = doc.cEstadosDocumento?.reduce((prev, curr) =>
+            curr.fechaHoraInicio > prev.fechaHoraInicio ? curr : prev,
+            doc.cEstadosDocumento[0]
+          );
+          return {
+            id: doc.id,
+            numero: doc.numero,
+            asunto: doc.getAsunto(),
+            tipoDocumento: doc.tipoDocumento?.nombre ?? null,
+            estadoActual: ultimoEstado?.estado?.nombre ?? null,
+          };
+        }),
+      })),
+    };
+  }
 }

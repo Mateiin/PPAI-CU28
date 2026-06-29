@@ -20,8 +20,6 @@ export class Empleado {
   @JoinColumn({ name: 'cm_asignada_id' })
   cmAsignada: ComisionMedica | null;
 
-  // @Column({ name: 'usuario', type: 'varchar'})
-  // usuario: Usuario;
   @OneToOne(() => Usuario, (u) => u.empleado)
   usuario: Usuario;
 
