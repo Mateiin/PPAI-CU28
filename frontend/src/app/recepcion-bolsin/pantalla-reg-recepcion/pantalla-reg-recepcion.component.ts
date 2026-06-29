@@ -110,7 +110,7 @@ export class PantallaRegRecepcionComponent implements OnInit {
     if (!this.opcionGlobal) return;
     if (this.opcionGlobal === 1) {
       // Opción 1: todo aceptado, ir directo a confirmación
-      this.confirmar();
+      this.confirmarSelec();
     } else {
       // Opciones 2/3/4: marcar cuáles docs están afectadas
       this.docsAfectadas = new Set();
@@ -150,11 +150,18 @@ export class PantallaRegRecepcionComponent implements OnInit {
   seleccionarOpcionDeRecepcion(valor: number): void {
   this.opcionGlobal = valor;
   }
+
+  // 34.solicitarConfirmacion()
+solicitarConfirmacion(mensaje: string = '¿Confirma el registro de la recepción del bolsín?'): boolean {
+  return window.confirm(mensaje);
+
+}
   // ── Paso 9-10: confirmar ───────────────────────────────────────────────
-  confirmar(): void {
+  // 35.confirmarSelec()
+  confirmarSelec(): void {
     if (!this.bolsinSeleccionado || !this.opcionGlobal) return;
 
-    const confirmado = window.confirm('¿Confirma el registro de la recepción del bolsín?');
+    const confirmado = this.solicitarConfirmacion();
     if (!confirmado) return;
 
     this.procesando = true;

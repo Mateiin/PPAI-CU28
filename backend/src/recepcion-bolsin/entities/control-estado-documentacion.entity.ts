@@ -26,13 +26,29 @@ export class CambioEstadoDocumentacion {
   @JoinColumn({ name: 'documentacion_id' })
   documentacion: Documentacion;
 
+  //60. new()
+  static new(
+    estado: Estado,
+    fechaHoraInicio: Date,
+    documentacion: Documentacion,
+    responsableCE: Empleado | null = null,
+  ): CambioEstadoDocumentacion {
+    const cambioEstado = new CambioEstadoDocumentacion();
+    cambioEstado.estado = estado;
+    cambioEstado.fechaHoraInicio = fechaHoraInicio;
+    cambioEstado.fechaHoraFin = null;
+    cambioEstado.documentacion = documentacion;
+    cambioEstado.responsableCE = responsableCE;
+    return cambioEstado;
+  }
+
   // 57.sosUltimo()
   sosUltimo(): boolean {
     return this.fechaHoraFin === null;
   }
 
-  // 58.setFechaHoraFin()
-  setFechaHoraFin(fecha: Date): void {
+  // 58.setFechaYHoraFin()
+  setFechaYHoraFin(fecha: Date): void {
     this.fechaHoraFin = fecha;
   }
 }

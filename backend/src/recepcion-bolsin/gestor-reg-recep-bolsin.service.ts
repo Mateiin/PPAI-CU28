@@ -28,6 +28,7 @@ export class GestorRegRecepBolsin {
   private estadoDocRecibidaYRechazada: Estado | null = null;
   private estadoDocParaRedirigir: Estado | null = null;
   private fechaHoraActual: Date | null = null;
+  private confirmacionDeSeleccion: boolean | null = null;
 
 
   constructor(
@@ -116,6 +117,15 @@ export class GestorRegRecepBolsin {
   tomarOpcionDeRecepcionSeleccionada(dto: RecepcionarBolsinDto, docId: number): void {
   this.opcionSeleccionada = dto.opciones.find((o) => o.documentacionId === docId) ?? null;
   }
+
+  //36.tomarConfDeSelec()
+  tomarConfDeSelec(dto: RecepcionarBolsinDto): boolean {
+    this.confirmacionDeSeleccion = dto.opciones.length > 0;
+    if (!this.confirmacionDeSeleccion) {
+      throw new NotFoundException('No se confirmó la recepción del bolsín');
+    }
+    return this.confirmacionDeSeleccion;
+  }
   
   // ── Paso 24-30: obtener información de remitos y docs ─────────────────
 
@@ -133,27 +143,30 @@ export class GestorRegRecepBolsin {
     return this.datosRemitosYDocumentacion;
   }
 
-  // ── Pasos 39-47: buscar estados necesarios ─────────────────────────────
+  // ── Pasos 38-41-44: buscar estados necesarios ─────────────────────────────
 
+  //38. buscarEstadoRecibidoEnCMD()
   async buscarEstadoRecibidoEnCMD(estados: Estado[]): Promise<Estado | null> {
     this.estadoRecibidoEnCMDestino =
       estados.find((e) => e.esAmbitoBolsin() && e.esRecibidoEnCMDestino()) ?? null;
     return this.estadoRecibidoEnCMDestino;
   }
 
+  //41. buscarEstadoRecibidoYAceptado()
   async buscarEstadoRecibidoYAceptado(estados: Estado[]): Promise<Estado | null> {
     this.estadoRecibidoYAceptado =
       estados.find((e) => e.esAmbitoRemito() && e.esRecibidoYAceptado()) ?? null;
     return this.estadoRecibidoYAceptado;
   }
 
+  //44. buscarEstadoRecibidaYAceptada()
   async buscarEstadoRecibidaYAceptada(estados: Estado[]): Promise<Estado | null> {
     this.estadoDocRecibidaYAceptada =
       estados.find((e) => e.esAmbitoDocumentacion() && e.esRecibidaYAceptada()) ?? null;
     return this.estadoDocRecibidaYAceptada;
   }
 
-  // ── Paso 48: obtener fecha/hora actual ────────────────────────────────
+  // ── Paso 47: obtener fecha/hora actual ────────────────────────────────
 
   obtenerFechaHoraActual(): Date {
     return new Date();
@@ -166,6 +179,7 @@ export class GestorRegRecepBolsin {
     this.buscarCMDelUsuario();
     await this.obtenerBolsinesEnEstadoEnviado();
     this.tomarBolsinSeleccionado(dto.bolsinId);
+    this.tomarConfDeSelec(dto);
 
     const todosLosEstados = await this.estadoRepo.find();
     await this.buscarEstadoRecibidoEnCMD(todosLosEstados);
@@ -204,8 +218,12 @@ export class GestorRegRecepBolsin {
       }
     }
 
+    //61. llamarCUNotificarRecepcionBolsin()
     this.llamarCUNotificarRecepcionBolsin();
+  
+    //63. finCU()
     return this.finCU(bolsin);
+
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────

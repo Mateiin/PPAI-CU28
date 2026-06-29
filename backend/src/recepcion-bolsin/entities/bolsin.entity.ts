@@ -82,6 +82,8 @@ export class Bolsin {
   if (actual && actual.sosUltimo()) {
     actual.setFechaHoraFin(fecha);
   }
+
+  //52.new()
   const nuevo = new CambioEstadoBolsin();
   nuevo.fechaHoraInicio = fecha;
   nuevo.fechaHoraFin = null;
@@ -91,7 +93,7 @@ export class Bolsin {
   this.cEstadosBolsin.push(nuevo);
 }
 
-  // .registrarRecepcion()
+  // 49.registrarRecepcion()
   registrarRecepcion(estado: Estado, fechaHoraActual: Date, empleado: Empleado): void {
     this.crearCEBolsin(fechaHoraActual, estado, empleado);
   }
