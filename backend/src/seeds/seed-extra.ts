@@ -34,7 +34,7 @@ async function seedExtra() {
   const estadoEnBolsinEnviado = await estadoRepo.findOneOrFail({ where: { nombre: 'EnBolsinEnviado', ambito: AmbitoEstado.BOLSIN } });
   const estadoDocEnBolsinEnviado = await estadoRepo.findOneOrFail({ where: { nombre: 'EnBolsinEnviado', ambito: AmbitoEstado.DOCUMENTACION } });
   const tipoExpediente = await tipoDocRepo.findOneOrFail({ where: { nombre: 'Expediente' } });
-  const tipoNota = await tipoDocRepo.findOneOrFail({ where: { nombre: 'Nota' } });
+  const tipoEstudioMedico = await tipoDocRepo.findOneOrFail({ where: { nombre: 'EstudioMedico' } });
   const empleado = await empleadoRepo.findOneOrFail({ where: { legajo: 'EMP001' } });
   const cmOrigen = await cmRepo.findOneOrFail({ where: { codigo: 'CMC-001' } });
   const cmDestino = await cmRepo.findOneOrFail({ where: { codigo: 'CMJ-002' } });
@@ -47,7 +47,7 @@ async function seedExtra() {
   );
 
   const doc1 = await docRepo.save(docRepo.create({ numero: `DOC-A${suffix}`, asunto: 'Expediente de prueba correcta', tipoDocumento: tipoExpediente, cEstadosDocumento: [] }));
-  const doc2 = await docRepo.save(docRepo.create({ numero: `DOC-B${suffix}`, asunto: 'Nota con error de firma', tipoDocumento: tipoNota, cEstadosDocumento: [] }));
+  const doc2 = await docRepo.save(docRepo.create({ numero: `DOC-B${suffix}`, asunto: 'Estudio médico completo', tipoDocumento: tipoEstudioMedico, cEstadosDocumento: [] }));
   const doc3 = await docRepo.save(docRepo.create({ numero: `DOC-C${suffix}`, asunto: 'Expediente con hojas faltantes', tipoDocumento: tipoExpediente, cEstadosDocumento: [] }));
   const doc4 = await docRepo.save(docRepo.create({ numero: `DOC-D${suffix}`, asunto: 'Expediente destino incorrecto', tipoDocumento: tipoExpediente, cEstadosDocumento: [] }));
 

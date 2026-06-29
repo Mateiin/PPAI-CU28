@@ -77,6 +77,37 @@ h3 { margin: 0 0 0.5rem; font-size: 1rem; color: #2c5282; }
 }
 .btn-principal:hover { background: #145a96; }
 
+
+button.btn-volver {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 24px;
+  border: 5px solid #3D6FF2;
+  border-radius: 10px;
+  background: #FFFFFF;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 500;
+  font-family: Arial, sans-serif;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.btn-volver:hover {
+  background: #3D6FF2;
+}
+
+button[type="button"] {
+    background: #e2e8f0;
+    color: #2d3748;
+}
+
+button:not([type="button"]):not(.btn-principal) {
+    background: #2a7de1;
+    color: white;
+}
+
 /* ── Info CM usuario ─────────────────────────────────────────────────────── */
 .cm-usuario {
   background: #e8f4fd;
@@ -97,40 +128,53 @@ h3 { margin: 0 0 0.5rem; font-size: 1rem; color: #2c5282; }
 }
 
 /* ── Filtros ─────────────────────────────────────────────────────────────── */
+
 .filtros {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 20px;
+    align-items: end;
+    margin-bottom: 1.5rem;
 }
 
-.filtros input {
-  flex: 1;
-  min-width: 180px;
-  padding: 7px 12px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 0.95rem;
+.campo-grupo {
+    display: flex;
+    flex-direction: column;
 }
 
-.filtros input:focus {
-  outline: none;
-  border-color: #1a6eb5;
-  box-shadow: 0 0 0 2px rgba(26,110,181,0.15);
+.campo-grupo label {
+    margin-bottom: 6px;
+    font-size: .95rem;
+    font-weight: 600;
+    color: #1a3a5c;
+}
+
+.campo-grupo input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    height: 40px;
+}
+
+.filtros .btn-principal {
+    height: 40px;
+    white-space: nowrap;
 }
 
 /* ── Tabla ───────────────────────────────────────────────────────────────── */
 .tabla {
   border-collapse: collapse;
-  width: 100%;
+  width: 98%;
   margin-bottom: 1rem;
   font-size: 0.95rem;
 }
 
 .tabla th, .tabla td {
   border: 1px solid #d0d7e0;
-  padding: 9px 13px;
+  padding: 5px 22px;
   text-align: left;
+  /* width: 80px; */
 }
 
 .tabla th {

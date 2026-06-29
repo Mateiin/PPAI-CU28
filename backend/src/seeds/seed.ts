@@ -69,14 +69,14 @@ async function seed() {
 
   // ── Tipos de documento ──────────────────────────────────────────────────
   const tipoExpediente = await tipoDocRepo.save(tipoDocRepo.create({ nombre: 'Expediente', descripcion: 'Expediente administrativo' }));
-  const tipoNota = await tipoDocRepo.save(tipoDocRepo.create({ nombre: 'Nota', descripcion: 'Nota interna' }));
+  const tipoEstudioMedico = await tipoDocRepo.save(tipoDocRepo.create({ nombre: 'EstudioMedico', descripcion: 'Estudio médico' }));
 
   // ── Solicitud de remito ─────────────────────────────────────────────────
   const solicitud = await solicitudRemitoRepo.save(solicitudRemitoRepo.create({ numero: 'SR-001', fecha: new Date('2026-06-20') }));
 
   // ── Documentaciones ─────────────────────────────────────────────────────
   const doc1 = await docRepo.save(docRepo.create({ numero: 'DOC-001', asunto: 'Expediente 123 - correcta', tipoDocumento: tipoExpediente, cEstadosDocumento: [] }));
-  const doc2 = await docRepo.save(docRepo.create({ numero: 'DOC-002', asunto: 'Nota sin firma', tipoDocumento: tipoNota, cEstadosDocumento: [] }));
+  const doc2 = await docRepo.save(docRepo.create({ numero: 'DOC-002', asunto: 'Estudio médico completo', tipoDocumento: tipoEstudioMedico, cEstadosDocumento: [] }));
   const doc3 = await docRepo.save(docRepo.create({ numero: 'DOC-003', asunto: 'Expediente con hojas faltantes', tipoDocumento: tipoExpediente, cEstadosDocumento: [] }));
   const doc4 = await docRepo.save(docRepo.create({ numero: 'DOC-004', asunto: 'Expediente destino incorrecto', tipoDocumento: tipoExpediente, cEstadosDocumento: [] }));
 
