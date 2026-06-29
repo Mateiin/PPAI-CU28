@@ -74,28 +74,28 @@ export class Bolsin {
   }
 
   //51.crearCEBolsin()
-  crearCEBolsin(fecha: Date, estado: Estado, empleado:Empleado): void {
-    const actual = this.getCambioEstadoActual();
-    if (actual && actual.sosUltimo()) {
-      actual.setFechaHoraFin(fecha);
-    }
-    this.new(fecha,estado,empleado)
+  //51.crearCEBolsin()
+crearCEBolsin(fecha: Date, estado: Estado, empleado: Empleado): void {
+  if (!this.cEstadosBolsin) {
+    this.cEstadosBolsin = [];
   }
+  const actual = this.getCambioEstadoActual();
+  if (actual && actual.sosUltimo()) {
+    actual.setFechaHoraFin(fecha);
+  }
+  const nuevo = new CambioEstadoBolsin();
+  nuevo.fechaHoraInicio = fecha;
+  nuevo.fechaHoraFin = null;
+  nuevo.estado = estado;
+  nuevo.bolsin = this;
+  nuevo.responsableCE = empleado;
+  this.cEstadosBolsin.push(nuevo);
+}
 
-    // .registrarRecepcion()
+  // .registrarRecepcion()
   registrarRecepcion(estado: Estado, fechaHoraActual: Date, empleado: Empleado): void {
-    this.new(fechaHoraActual, estado, empleado);
+    this.crearCEBolsin(fechaHoraActual, estado, empleado);
   }
 
-  new(fechaHoraActual: Date, estado: Estado, empleado: Empleado): CambioEstadoBolsin {
-  // new(fechaHoraActual,estado,empleado){
-    const nuevo = new CambioEstadoBolsin();
-    nuevo.fechaHoraInicio = fechaHoraActual;
-    nuevo.fechaHoraFin = null;
-    nuevo.estado = estado;
-    nuevo.bolsin = this;
-    nuevo.responsableCE = empleado;
-    this.cEstadosBolsin.push(nuevo);
-    return nuevo;
-  }
+  
 }
